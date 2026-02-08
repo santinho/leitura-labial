@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitura Labial - Party Game</title>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="loginScreen" class="screen">
+        <div class="container">
+            <h1>🎬 Leitura Labial</h1>
+            <p class="subtitle">Adivinhe o que foi dito!</p>
+            <div class="login-form">
+                <h2>Entrar em uma Sala</h2>
+                <input type="text" id="roomCode" placeholder="Digite o código da sala" maxlength="6">
+                <input type="text" id="playerName" placeholder="Seu nome" maxlength="20">
+                <button id="joinRoom" class="btn-primary">Entrar na Sala</button>
+                <div class="divider">ou</div>
+                <button id="createRoom" class="btn-secondary">Criar Nova Sala</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="lobbyScreen" class="screen hidden">
+        <div class="container">
+            <h1>🎬 Sala: <span id="lobbyRoomCode"></span></h1>
+            <div class="lobby-info">
+                <p>Aguardando jogadores...</p>
+                <p class="player-name">Você: <strong id="lobbyPlayerName"></strong></p>
+                <p class="leader-badge hidden" id="leaderBadge">👑 Você é o líder!</p>
+            </div>
+            <div class="players-waiting">
+                <h3>Jogadores na sala (<span id="playerCount">0</span>):</h3>
+                <div id="playersWaitingList" class="players-list"></div>
+            </div>
+            <div class="lobby-actions">
+                <button id="startGame" class="btn-primary" disabled>Iniciar Jogo</button>
+                <button id="leaveLobby" class="btn-secondary">Sair da Sala</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gameScreen" class="screen hidden">
+        <div class="game-header">
+            <div class="room-info">
+                <span>Sala: <strong id="gameRoomCode"></strong></span>
+            </div>
+            <div class="round-info">
+                <span>Rodada: <strong id="currentRound">1</strong>/<strong id="totalRounds">0</strong></span>
+            </div>
+        </div>
+
+        <div class="scoreboard">
+            <h3>Placar</h3>
+            <div id="scoreboardList"></div>
+        </div>
+
+        <div id="recordingPhase" class="game-phase hidden">
+            <h2>É sua vez de gravar!</h2>
+            <div class="phrase-box">
+                <p>Fale a seguinte frase:</p>
+                <h3 id="phraseToRecord"></h3>
+            </div>
+            <div class="video-recording">
+                <video id="recordPreview" autoplay muted playsinline></video>
+                <div class="recording-controls">
+                    <button id="startRecording" class="btn-primary">🔴 Gravar</button>
+                    <button id="stopRecording" class="btn-danger hidden">⏹️ Parar</button>
+                    <button id="submitVideo" class="btn-success hidden">✅ Enviar Vídeo</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="waitingPhase" class="game-phase hidden">
+            <h2>Aguardando...</h2>
+            <p id="waitingMessage">Aguardando outro jogador gravar o vídeo...</p>
+            <div class="spinner"></div>
+        </div>
+
+        <div id="watchingPhase" class="game-phase hidden">
+            <h2>Assista ao vídeo (SEM ÁUDIO)</h2>
+            <p>Jogador: <strong id="videoPlayerName"></strong></p>
+            <div class="video-player">
+                <video id="gameVideo" muted playsinline></video>
+                <div class="video-counter">
+                    <p>Visualizações: <strong id="viewCount">0</strong>/3</p>
+                    <button id="playVideo" class="btn-primary">▶️ Assistir</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="guessingPhase" class="game-phase hidden">
+            <h2>O que foi dito?</h2>
+            <p>Digite sua resposta:</p>
+            <div class="guess-input">
+                <input type="text" id="guessInput" placeholder="Digite o que você acha que foi dito..." maxlength="100">
+                <button id="submitGuess" class="btn-primary">Enviar Resposta</button>
+            </div>
+            <p class="hint">Você já assistiu 3 vezes. Faça sua melhor tentativa!</p>
+        </div>
+
+        <div id="resultsPhase" class="game-phase hidden">
+            <h2>Resultado da Rodada</h2>
+            <div class="correct-phrase">
+                <p>Frase correta:</p>
+                <h3 id="correctPhrase"></h3>
+            </div>
+            <div class="round-results">
+                <h4>Respostas dos jogadores:</h4>
+                <div id="roundResultsList"></div>
+            </div>
+            <button id="continueGame" class="btn-primary">Próxima Rodada</button>
+        </div>
+
+        <div id="finalResultsPhase" class="game-phase hidden">
+            <h2>🏆 Fim de Jogo!</h2>
+            <div class="winner-announcement">
+                <h3 id="winnerName"></h3>
+                <p id="winnerScore"></p>
+            </div>
+            <div class="final-scoreboard">
+                <h4>Placar Final:</h4>
+                <div id="finalScoreboardList"></div>
+            </div>
+            <button id="backToLobby" class="btn-primary">Voltar ao Lobby</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

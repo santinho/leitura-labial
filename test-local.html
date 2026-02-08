@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitura Labial - Party Game (Teste Local)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .info-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background: #5568d3;
+        }
+        ul {
+            line-height: 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="info-box">
+        <h1>🎬 Leitura Labial - Party Game</h1>
+        <h2>Como testar o jogo:</h2>
+        
+        <h3>Opção 1: Com Quarkus (Recomendado)</h3>
+        <ol>
+            <li>Abra o terminal na pasta do projeto</li>
+            <li>Execute: <code>./mvnw compile quarkus:dev</code></li>
+            <li>Acesse: <a href="http://localhost:8080">http://localhost:8080</a></li>
+        </ol>
+        
+        <h3>Opção 2: Servidor HTTP Simples</h3>
+        <ol>
+            <li>Abra o terminal na pasta <code>src/main/resources/META-INF/resources/</code></li>
+            <li>Execute: <code>python3 -m http.server 8000</code></li>
+            <li>Acesse: <a href="http://localhost:8000">http://localhost:8000</a></li>
+        </ol>
+        
+        <h3>Opção 3: Abrir Diretamente</h3>
+        <p><a class="btn" href="src/main/resources/META-INF/resources/index.html">Abrir Jogo</a></p>
+        <p><small>Nota: Alguns recursos de vídeo podem não funcionar abrindo diretamente o arquivo.</small></p>
+        
+        <h2>📋 Funcionalidades</h2>
+        <ul>
+            <li>✅ Criar e entrar em salas</li>
+            <li>✅ Sistema de lobby com múltiplos jogadores (simulados)</li>
+            <li>✅ Gravar vídeos (com sua câmera ou modo simulado)</li>
+            <li>✅ Assistir vídeos sem áudio</li>
+            <li>✅ Sistema de pontuação</li>
+            <li>✅ Placar em tempo real</li>
+            <li>✅ Resultado final</li>
+        </ul>
+        
+        <h2>🎮 Como Jogar</h2>
+        <ol>
+            <li>Digite seu nome e crie uma nova sala</li>
+            <li>Aguarde outros jogadores (serão simulados automaticamente)</li>
+            <li>Clique em "Iniciar Jogo"</li>
+            <li>Quando for sua vez, grave um vídeo falando a frase exibida</li>
+            <li>Quando for a vez de outro jogador, assista o vídeo 3 vezes</li>
+            <li>Tente adivinhar o que foi dito!</li>
+            <li>Ganhe pontos baseado na sua precisão</li>
+        </ol>
+        
+        <p><strong>Nota:</strong> Este é um protótipo com WebSocket mockado. Os outros jogadores são simulados para demonstração.</p>
+    </div>
+</body>
+</html>
