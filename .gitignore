@@ -1,2 +1,3 @@
 target/
 .ssh/
+SSH_KEY_PUB.txt
