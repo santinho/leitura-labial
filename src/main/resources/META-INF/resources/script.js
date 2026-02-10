@@ -1,6 +1,6 @@
 class LipReadingGame {
     constructor() {
-        this.appVersion = '2026-02-09.1';
+        this.appVersion = '2026-02-10.1';
         this.roomCode = null;
         this.playerName = null;
         this.isLeader = false;
