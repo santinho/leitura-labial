@@ -1,5 +1,6 @@
 class LipReadingGame {
     constructor() {
+        this.appVersion = '2026-02-09.1';
         this.roomCode = null;
         this.playerName = null;
         this.isLeader = false;
@@ -14,11 +15,13 @@ class LipReadingGame {
         this.recordedChunks = [];
         this.recordedVideoBlob = null;
         this.mockVideos = {};
+        this.returnLobbyTimer = null;
+        this.returnLobbySeconds = 0;
         this.socket = null;
         this.connected = false;
         this.ignoreSocketClose = false;
         this.config = {
-            mockEnabled: true,
+            mockEnabled: false,
             minPlayers: 2
         };
         
@@ -34,6 +37,7 @@ class LipReadingGame {
         ];
         
         this.initializeEventListeners();
+        this.renderVersion();
         this.loadConfig().finally(() => this.showLoginScreen());
     }
 
@@ -70,6 +74,13 @@ class LipReadingGame {
         document.getElementById('submitGuess').addEventListener('click', () => this.submitGuess());
         document.getElementById('continueGame').addEventListener('click', () => this.nextRound());
         document.getElementById('backToLobby').addEventListener('click', () => this.backToLobby());
+    }
+
+    renderVersion() {
+        const versionEl = document.getElementById('appVersion');
+        if (!versionEl) return;
+        versionEl.textContent = `versao ${this.appVersion}`;
+        versionEl.classList.remove('hidden');
     }
 
     showLoginScreen() {
@@ -270,6 +281,12 @@ class LipReadingGame {
             case 'gameOver':
                 this.scores = payload || {};
                 this.showFinalResults();
+                this.startReturnLobbyCountdown(10);
+                break;
+            case 'returnToLobby':
+                this.resetForLobby();
+                this.showLobbyScreen();
+                this.updateLobby();
                 break;
             case 'error':
                 if (payload.message) alert(payload.message);
@@ -520,16 +537,33 @@ class LipReadingGame {
         if (this.viewCount >= 3) return;
         
         const videoElement = document.getElementById('gameVideo');
-        videoElement.play();
-        this.viewCount++;
-        document.getElementById('viewCount').textContent = this.viewCount;
-        
-        videoElement.onended = () => {
+        const hasSrc = !!videoElement.getAttribute('src');
+        const finalizeView = () => {
             if (this.viewCount >= 3) {
                 document.getElementById('playVideo').disabled = true;
                 document.getElementById('playVideo').textContent = '✓ Visualizações completas';
                 setTimeout(() => this.showGuessingPhase(), 1500);
             }
+        };
+
+        if (hasSrc) {
+            videoElement.play().catch(() => {
+                // Se falhar, simula o término do vídeo
+                setTimeout(finalizeView, 800);
+            });
+        } else if (this.config.mockEnabled) {
+            // No modo mock pode não haver vídeo real; simula a reprodução
+            setTimeout(finalizeView, 800);
+        }
+        this.viewCount++;
+        document.getElementById('viewCount').textContent = this.viewCount;
+
+        if (this.viewCount >= 3) {
+            finalizeView();
+        }
+        
+        videoElement.onended = () => {
+            finalizeView();
         };
     }
 
@@ -656,6 +690,8 @@ class LipReadingGame {
             `;
             finalScoreboard.appendChild(scoreDiv);
         });
+
+        this.updateReturnLobbyLabel();
     }
 
     updateScoreboard() {
@@ -681,6 +717,63 @@ class LipReadingGame {
         }
         this.resetGame();
         this.showLoginScreen();
+    }
+
+    startReturnLobbyCountdown(seconds) {
+        this.returnLobbySeconds = seconds;
+        if (this.returnLobbyTimer) {
+            clearInterval(this.returnLobbyTimer);
+        }
+        this.updateReturnLobbyLabel();
+        this.returnLobbyTimer = setInterval(() => {
+            this.returnLobbySeconds -= 1;
+            if (this.returnLobbySeconds <= 0) {
+                clearInterval(this.returnLobbyTimer);
+                this.returnLobbyTimer = null;
+                return;
+            }
+            this.updateReturnLobbyLabel();
+        }, 1000);
+    }
+
+    updateReturnLobbyLabel() {
+        const label = document.getElementById('returnLobbyLabel');
+        if (!label) return;
+        if (this.returnLobbySeconds > 0) {
+            label.textContent = `Retornando ao lobby em ${this.returnLobbySeconds} segundos`;
+        } else {
+            label.textContent = '';
+        }
+    }
+
+    resetForLobby() {
+        if (this.returnLobbyTimer) {
+            clearInterval(this.returnLobbyTimer);
+            this.returnLobbyTimer = null;
+        }
+        this.returnLobbySeconds = 0;
+        this.currentRound = 0;
+        this.totalRounds = 0;
+        this.scores = {};
+        this.currentPhrase = null;
+        this.currentVideoPlayer = null;
+        this.viewCount = 0;
+        this.mockVideos = {};
+        this.recordedChunks = [];
+        this.recordedVideoBlob = null;
+
+        const gameVideo = document.getElementById('gameVideo');
+        if (gameVideo) {
+            gameVideo.removeAttribute('src');
+        }
+
+        const preview = document.getElementById('recordPreview');
+        if (preview && preview.srcObject) {
+            preview.srcObject.getTracks().forEach(track => track.stop());
+            preview.srcObject = null;
+        }
+
+        this.updateReturnLobbyLabel();
     }
 
     resetGame() {

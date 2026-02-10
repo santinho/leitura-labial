@@ -1,4 +1,7 @@
 com/example/partygame/RoomManager.class
+com/example/partygame/RoomManager$Player.class
 com/example/partygame/RoomManager$Room.class
 com/example/partygame/Message.class
+com/example/partygame/RoomManager$Guess.class
+com/example/partygame/ConfigResource.class
 com/example/partygame/GameSocket.class

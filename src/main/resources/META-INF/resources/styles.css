@@ -47,6 +47,16 @@ h1 {
     font-size: 1.2em;
 }
 
+.app-version {
+    text-align: center;
+    margin-top: -15px;
+    margin-bottom: 15px;
+    color: #444;
+    font-size: 0.9rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
 .login-form {
     max-width: 400px;
     margin: 0 auto;

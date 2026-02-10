@@ -53,14 +53,14 @@ public class RoomManager {
                         return;
                     }
                     room.sendToAll(Message.of("gameStarted", "{}"));
-                    room.requestNextRecorder();
+                    room.requestNextRecorder(minPlayers);
                     break;
                 }
                 case "uploadVideo":
                     room.handleUpload(session, msg.payload);
                     break;
                 case "submitGuess":
-                    room.handleGuess(session, msg.payload);
+                    room.handleGuess(session, msg.payload, minPlayers);
                     break;
                 default:
                     break;
@@ -172,10 +172,13 @@ public class RoomManager {
             return null;
         }
 
-        void requestNextRecorder() {
+        void requestNextRecorder(int minPlayers) {
             Session next = turnQueue.poll();
             if (next == null) {
                 sendToAll(Message.of("gameOver", scoresJson()));
+                resetGameState();
+                sendToAll(Message.of("returnToLobby", "{}"));
+                sendRoster(minPlayers);
                 return;
             }
             currentRecorderSession = next;
@@ -202,7 +205,7 @@ public class RoomManager {
             }
         }
 
-        void handleGuess(Session session, String payloadJson) {
+        void handleGuess(Session session, String payloadJson, int minPlayers) {
             try {
                 if (session == currentRecorderSession) return;
                 Map<String, String> p = new ObjectMapper().readValue(payloadJson, Map.class);
@@ -222,7 +225,7 @@ public class RoomManager {
                 if (guesses.get(currentRecorderSession).size() >= expected) {
                     scoreRound(currentRecorderSession);
                     guesses.remove(currentRecorderSession);
-                    requestNextRecorder();
+                    requestNextRecorder(minPlayers);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -258,6 +261,17 @@ public class RoomManager {
             } catch (Exception ignored) {}
         }
 
+        void resetGameState() {
+            gameStarted = false;
+            turnQueue.clear();
+            currentRecorderSession = null;
+            currentPhrase = null;
+            guesses.clear();
+            for (Player player : players.values()) {
+                player.score = 0;
+            }
+        }
+
         int calculateSimilarity(String correct, String guess) {
             if (correct.equals(guess)) return 100;
             String[] correctWords = correct.split("\\s+");
@@ -291,7 +305,7 @@ public class RoomManager {
         void sendTo(Session session, Message m) {
             try {
                 String json = new ObjectMapper().writeValueAsString(m);
-                session.getBasicRemote().sendText(json);
+                session.getAsyncRemote().sendText(json);
             } catch (Exception ignored) {}
         }
 
@@ -300,7 +314,7 @@ public class RoomManager {
             try { json = new ObjectMapper().writeValueAsString(m); }
             catch (Exception e) { return; }
             for (Session session : players.keySet()) {
-                try { session.getBasicRemote().sendText(json); } catch (IOException ignored) {}
+                try { session.getAsyncRemote().sendText(json); } catch (Exception ignored) {}
             }
         }
     }

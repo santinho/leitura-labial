@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Path("/api/config")
 public class ConfigResource {
-    @ConfigProperty(name = "game.mock-enabled", defaultValue = "true")
+    @ConfigProperty(name = "game.mock-enabled", defaultValue = "false")
     boolean mockEnabled;
 
     @ConfigProperty(name = "game.min-players", defaultValue = "2")

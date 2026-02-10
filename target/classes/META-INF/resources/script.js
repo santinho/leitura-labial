@@ -1,5 +1,6 @@
 class LipReadingGame {
     constructor() {
+        this.appVersion = '2026-02-09.1';
         this.roomCode = null;
         this.playerName = null;
         this.isLeader = false;
@@ -14,6 +15,13 @@ class LipReadingGame {
         this.recordedChunks = [];
         this.recordedVideoBlob = null;
         this.mockVideos = {};
+        this.socket = null;
+        this.connected = false;
+        this.ignoreSocketClose = false;
+        this.config = {
+            mockEnabled: false,
+            minPlayers: 2
+        };
         
         this.phrases = [
             "O cachorro late à noite na rua",
@@ -27,7 +35,20 @@ class LipReadingGame {
         ];
         
         this.initializeEventListeners();
-        this.showLoginScreen();
+        this.renderVersion();
+        this.loadConfig().finally(() => this.showLoginScreen());
+    }
+
+    async loadConfig() {
+        try {
+            const response = await fetch('/api/config', { cache: 'no-store' });
+            if (!response.ok) return;
+            const data = await response.json();
+            if (typeof data.mockEnabled === 'boolean') this.config.mockEnabled = data.mockEnabled;
+            if (Number.isInteger(data.minPlayers)) this.config.minPlayers = data.minPlayers;
+        } catch (error) {
+            console.warn('Não foi possível carregar configuração do servidor. Usando padrão.', error);
+        }
     }
 
     initializeEventListeners() {
@@ -51,6 +72,13 @@ class LipReadingGame {
         document.getElementById('submitGuess').addEventListener('click', () => this.submitGuess());
         document.getElementById('continueGame').addEventListener('click', () => this.nextRound());
         document.getElementById('backToLobby').addEventListener('click', () => this.backToLobby());
+    }
+
+    renderVersion() {
+        const versionEl = document.getElementById('appVersion');
+        if (!versionEl) return;
+        versionEl.textContent = `versao ${this.appVersion}`;
+        versionEl.classList.remove('hidden');
     }
 
     showLoginScreen() {
@@ -90,12 +118,19 @@ class LipReadingGame {
         
         this.roomCode = this.generateRoomCode();
         this.playerName = playerName;
-        this.isLeader = true;
-        this.players = [{ name: playerName, id: 'player1', isLeader: true }];
-        this.scores[playerName] = 0;
-        
-        this.mockAddPlayers();
-        this.showLobbyScreen();
+        this.isLeader = false;
+        this.players = [];
+        this.scores = {};
+
+        if (this.config.mockEnabled) {
+            this.isLeader = true;
+            this.players = [{ name: playerName, id: 'player1', isLeader: true }];
+            this.scores[playerName] = 0;
+            this.mockAddPlayers();
+            this.showLobbyScreen();
+        } else {
+            this.connectAndJoin();
+        }
     }
 
     joinRoom() {
@@ -109,14 +144,152 @@ class LipReadingGame {
         
         this.roomCode = roomCode;
         this.playerName = playerName;
-        this.isLeader = true;
-        this.players = [
-            { name: playerName, id: 'player1', isLeader: true }
-        ];
-        this.scores[playerName] = 0;
-        
-        this.mockAddPlayers();
-        this.showLobbyScreen();
+        this.isLeader = false;
+        this.players = [];
+        this.scores = {};
+
+        if (this.config.mockEnabled) {
+            this.isLeader = true;
+            this.players = [
+                { name: playerName, id: 'player1', isLeader: true }
+            ];
+            this.scores[playerName] = 0;
+            this.mockAddPlayers();
+            this.showLobbyScreen();
+        } else {
+            this.connectAndJoin();
+        }
+    }
+
+    connectAndJoin() {
+        this.connectWebSocket(this.roomCode)
+            .then(() => {
+                this.sendMessage('setName', { name: this.playerName });
+                this.showLobbyScreen();
+            })
+            .catch(() => {
+                alert('Não foi possível conectar ao servidor.');
+                this.showLoginScreen();
+            });
+    }
+
+    connectWebSocket(roomCode) {
+        return new Promise((resolve, reject) => {
+            const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+            const url = `${protocol}://${window.location.host}/ws/game/${encodeURIComponent(roomCode)}`;
+            this.socket = new WebSocket(url);
+
+            this.socket.onopen = () => {
+                this.connected = true;
+                resolve();
+            };
+            this.socket.onerror = () => reject();
+            this.socket.onmessage = (event) => this.handleServerMessage(event.data);
+            this.socket.onclose = () => {
+                this.connected = false;
+                if (this.ignoreSocketClose) {
+                    this.ignoreSocketClose = false;
+                    return;
+                }
+                if (!this.config.mockEnabled) {
+                    alert('Conexão encerrada.');
+                    this.showLoginScreen();
+                    this.resetGame();
+                }
+            };
+        });
+    }
+
+    closeSocket() {
+        if (this.socket) {
+            this.ignoreSocketClose = true;
+            this.socket.close();
+            this.socket = null;
+            this.connected = false;
+        }
+    }
+
+    sendMessage(type, payloadObj) {
+        if (!this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+        const message = {
+            type,
+            payload: JSON.stringify(payloadObj || {})
+        };
+        this.socket.send(JSON.stringify(message));
+    }
+
+    handleServerMessage(data) {
+        let msg;
+        try {
+            msg = JSON.parse(data);
+        } catch (e) {
+            return;
+        }
+        let payload = {};
+        try {
+            payload = msg.payload ? JSON.parse(msg.payload) : {};
+        } catch (e) {
+            payload = {};
+        }
+
+        switch (msg.type) {
+            case 'roster':
+                this.players = payload.players || [];
+                this.isLeader = this.players.some(p => p.name === this.playerName && p.isLeader);
+                this.updateLobby();
+                this.players.forEach(p => { this.scores[p.name] = this.scores[p.name] || 0; });
+                break;
+            case 'gameStarted':
+                this.totalRounds = this.players.length;
+                this.currentRound = 0;
+                this.showGameScreen();
+                this.updateScoreboard();
+                this.showWaitingPhase('Aguardando o primeiro jogador gravar o vídeo...');
+                break;
+            case 'requestRecord':
+                this.currentVideoPlayer = { name: payload.player };
+                if (this.currentRound < this.totalRounds) {
+                    this.currentRound += 1;
+                }
+                document.getElementById('currentRound').textContent = this.currentRound;
+                document.getElementById('totalRounds').textContent = this.totalRounds;
+                this.viewCount = 0;
+                if (payload.player === this.playerName) {
+                    this.currentPhrase = this.phrases[Math.floor(Math.random() * this.phrases.length)];
+                    this.showRecordingPhase();
+                } else {
+                    this.showWaitingPhase(`Aguardando ${payload.player} gravar o vídeo...`);
+                }
+                break;
+            case 'videoAvailable':
+                this.currentVideoPlayer = { name: payload.player };
+                this.viewCount = 0;
+                this.mockVideos[payload.player] = payload.videoData;
+                if (payload.player === this.playerName) {
+                    this.showWaitingPhase('Vídeo enviado! Aguardando outros jogadores...');
+                } else {
+                    this.showWatchingPhase();
+                }
+                break;
+            case 'roundComplete':
+                this.scores = payload.scores || {};
+                this.currentPhrase = payload.phrase || this.currentPhrase;
+                this.showResultsPhase();
+                break;
+            case 'gameOver':
+                this.scores = payload || {};
+                break;
+            case 'returnToLobby':
+                this.resetForLobby();
+                this.showLobbyScreen();
+                this.updateLobby();
+                break;
+            case 'error':
+                if (payload.message) alert(payload.message);
+                break;
+            default:
+                break;
+        }
     }
 
     mockAddPlayers() {
@@ -160,7 +333,8 @@ class LipReadingGame {
         
         if (this.isLeader) {
             document.getElementById('leaderBadge').classList.remove('hidden');
-            document.getElementById('startGame').disabled = this.players.length < 1;
+            document.getElementById('startGame').disabled = this.players.length < this.config.minPlayers;
+            document.getElementById('startGame').style.display = '';
         } else {
             document.getElementById('leaderBadge').classList.add('hidden');
             document.getElementById('startGame').style.display = 'none';
@@ -179,21 +353,28 @@ class LipReadingGame {
     }
 
     leaveLobby() {
+        if (!this.config.mockEnabled) {
+            this.closeSocket();
+        }
         this.showLoginScreen();
         this.resetGame();
     }
 
     startGame() {
-        if (!this.isLeader || this.players.length < 1) {
-            alert('É necessário pelo menos 1 jogador para começar');
+        if (!this.isLeader || this.players.length < this.config.minPlayers) {
+            alert(`É necessário pelo menos ${this.config.minPlayers} jogadores para começar`);
             return;
         }
-        
-        this.totalRounds = this.players.length;
-        this.currentRound = 1;
-        this.showGameScreen();
-        this.updateScoreboard();
-        this.startRound();
+
+        if (this.config.mockEnabled) {
+            this.totalRounds = this.players.length;
+            this.currentRound = 1;
+            this.showGameScreen();
+            this.updateScoreboard();
+            this.startRound();
+        } else {
+            this.sendMessage('start', {});
+        }
     }
 
     startRound() {
@@ -293,15 +474,29 @@ class LipReadingGame {
     }
 
     submitVideo() {
-        if (this.recordedVideoBlob) {
-            this.mockVideos[this.currentVideoPlayer.name] = URL.createObjectURL(this.recordedVideoBlob);
+        if (this.config.mockEnabled) {
+            if (this.recordedVideoBlob) {
+                this.mockVideos[this.currentVideoPlayer.name] = URL.createObjectURL(this.recordedVideoBlob);
+            }
+            this.showWaitingPhase('Vídeo enviado! Aguardando outros jogadores...');
+            setTimeout(() => {
+                this.showWatchingPhase();
+            }, 2000);
+            return;
         }
-        
-        this.showWaitingPhase('Vídeo enviado! Aguardando outros jogadores...');
-        
-        setTimeout(() => {
-            this.showWatchingPhase();
-        }, 2000);
+
+        if (!this.recordedVideoBlob) {
+            alert('Nenhum vídeo gravado.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const videoData = reader.result;
+            this.sendMessage('uploadVideo', { phrase: this.currentPhrase, videoData });
+            this.showWaitingPhase('Vídeo enviado! Aguardando outros jogadores...');
+        };
+        reader.readAsDataURL(this.recordedVideoBlob);
     }
 
     mockVideoRecorded() {
@@ -338,16 +533,33 @@ class LipReadingGame {
         if (this.viewCount >= 3) return;
         
         const videoElement = document.getElementById('gameVideo');
-        videoElement.play();
-        this.viewCount++;
-        document.getElementById('viewCount').textContent = this.viewCount;
-        
-        videoElement.onended = () => {
+        const hasSrc = !!videoElement.getAttribute('src');
+        const finalizeView = () => {
             if (this.viewCount >= 3) {
                 document.getElementById('playVideo').disabled = true;
                 document.getElementById('playVideo').textContent = '✓ Visualizações completas';
                 setTimeout(() => this.showGuessingPhase(), 1500);
             }
+        };
+
+        if (hasSrc) {
+            videoElement.play().catch(() => {
+                // Se falhar, simula o término do vídeo
+                setTimeout(finalizeView, 800);
+            });
+        } else if (this.config.mockEnabled) {
+            // No modo mock pode não haver vídeo real; simula a reprodução
+            setTimeout(finalizeView, 800);
+        }
+        this.viewCount++;
+        document.getElementById('viewCount').textContent = this.viewCount;
+
+        if (this.viewCount >= 3) {
+            finalizeView();
+        }
+        
+        videoElement.onended = () => {
+            finalizeView();
         };
     }
 
@@ -364,16 +576,19 @@ class LipReadingGame {
             alert('Por favor, digite sua resposta');
             return;
         }
-        
-        const accuracy = this.calculateAccuracy(this.currentPhrase, guess);
-        this.scores[this.playerName] += accuracy;
-        
-        this.showWaitingPhase('Resposta enviada! Aguardando outros jogadores...');
-        
-        setTimeout(() => {
-            this.mockOtherPlayersGuess();
-            this.showResultsPhase();
-        }, 2000);
+
+        if (this.config.mockEnabled) {
+            const accuracy = this.calculateAccuracy(this.currentPhrase, guess);
+            this.scores[this.playerName] += accuracy;
+            this.showWaitingPhase('Resposta enviada! Aguardando outros jogadores...');
+            setTimeout(() => {
+                this.mockOtherPlayersGuess();
+                this.showResultsPhase();
+            }, 2000);
+        } else {
+            this.sendMessage('submitGuess', { guess });
+            this.showWaitingPhase('Resposta enviada! Aguardando outros jogadores...');
+        }
     }
 
     mockOtherPlayersGuess() {
@@ -409,7 +624,7 @@ class LipReadingGame {
         
         const sortedPlayers = [...this.players]
             .filter(p => p.name !== this.currentVideoPlayer.name)
-            .sort((a, b) => this.scores[b.name] - this.scores[a.name]);
+            .sort((a, b) => (this.scores[b.name] || 0) - (this.scores[a.name] || 0));
         
         sortedPlayers.forEach(player => {
             const resultDiv = document.createElement('div');
@@ -417,7 +632,7 @@ class LipReadingGame {
             resultDiv.innerHTML = `
                 <div>
                     <strong>${player.name}</strong>
-                    <p class="accuracy">Pontuação: ${this.scores[player.name]} pontos</p>
+                    <p class="accuracy">Pontuação: ${this.scores[player.name] || 0} pontos</p>
                 </div>
             `;
             resultsList.appendChild(resultDiv);
@@ -425,17 +640,27 @@ class LipReadingGame {
         
         this.updateScoreboard();
         
-        if (this.currentRound >= this.totalRounds) {
-            document.getElementById('continueGame').textContent = 'Ver Resultado Final';
+        if (this.config.mockEnabled) {
+            if (this.currentRound >= this.totalRounds) {
+                document.getElementById('continueGame').textContent = 'Ver Resultado Final';
+            } else {
+                document.getElementById('continueGame').textContent = 'Próxima Rodada';
+            }
+        } else {
+            document.getElementById('continueGame').textContent = 'Aguardar Próxima Rodada';
         }
     }
 
     nextRound() {
-        if (this.currentRound >= this.totalRounds) {
-            this.showFinalResults();
+        if (this.config.mockEnabled) {
+            if (this.currentRound >= this.totalRounds) {
+                this.showFinalResults();
+            } else {
+                this.currentRound++;
+                this.startRound();
+            }
         } else {
-            this.currentRound++;
-            this.startRound();
+            this.showWaitingPhase('Aguardando a próxima rodada...');
         }
     }
 
@@ -443,11 +668,11 @@ class LipReadingGame {
         this.hideAllPhases();
         document.getElementById('finalResultsPhase').classList.remove('hidden');
         
-        const sortedPlayers = [...this.players].sort((a, b) => this.scores[b.name] - this.scores[a.name]);
+        const sortedPlayers = [...this.players].sort((a, b) => (this.scores[b.name] || 0) - (this.scores[a.name] || 0));
         const winner = sortedPlayers[0];
         
         document.getElementById('winnerName').textContent = `🏆 ${winner.name} Venceu!`;
-        document.getElementById('winnerScore').textContent = `${this.scores[winner.name]} pontos`;
+        document.getElementById('winnerScore').textContent = `${this.scores[winner.name] || 0} pontos`;
         
         const finalScoreboard = document.getElementById('finalScoreboardList');
         finalScoreboard.innerHTML = '';
@@ -457,7 +682,7 @@ class LipReadingGame {
             scoreDiv.className = 'score-item';
             scoreDiv.innerHTML = `
                 <span>${index + 1}º - ${player.name}</span>
-                <strong>${this.scores[player.name]} pontos</strong>
+                <strong>${this.scores[player.name] || 0} pontos</strong>
             `;
             finalScoreboard.appendChild(scoreDiv);
         });
@@ -467,22 +692,48 @@ class LipReadingGame {
         const scoreboard = document.getElementById('scoreboardList');
         scoreboard.innerHTML = '';
         
-        const sortedPlayers = [...this.players].sort((a, b) => this.scores[b.name] - this.scores[a.name]);
+        const sortedPlayers = [...this.players].sort((a, b) => (this.scores[b.name] || 0) - (this.scores[a.name] || 0));
         
         sortedPlayers.forEach(player => {
             const scoreDiv = document.createElement('div');
             scoreDiv.className = 'score-item' + (player.name === this.playerName ? ' current-player' : '');
             scoreDiv.innerHTML = `
                 <span>${player.name}</span>
-                <strong>${this.scores[player.name]} pts</strong>
+                <strong>${this.scores[player.name] || 0} pts</strong>
             `;
             scoreboard.appendChild(scoreDiv);
         });
     }
 
     backToLobby() {
+        if (!this.config.mockEnabled) {
+            this.closeSocket();
+        }
         this.resetGame();
         this.showLoginScreen();
+    }
+
+    resetForLobby() {
+        this.currentRound = 0;
+        this.totalRounds = 0;
+        this.scores = {};
+        this.currentPhrase = null;
+        this.currentVideoPlayer = null;
+        this.viewCount = 0;
+        this.mockVideos = {};
+        this.recordedChunks = [];
+        this.recordedVideoBlob = null;
+
+        const gameVideo = document.getElementById('gameVideo');
+        if (gameVideo) {
+            gameVideo.removeAttribute('src');
+        }
+
+        const preview = document.getElementById('recordPreview');
+        if (preview && preview.srcObject) {
+            preview.srcObject.getTracks().forEach(track => track.stop());
+            preview.srcObject = null;
+        }
     }
 
     resetGame() {
