@@ -231,11 +231,17 @@ h1 {
 .game-header {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 20px;
     background: #667eea;
     color: white;
     border-radius: 10px;
     margin-bottom: 20px;
+}
+
+.game-header > div {
+    flex: 1;
+    text-align: center;
 }
 
 .scoreboard {
@@ -286,8 +292,16 @@ h1 {
 }
 
 .phrase-box h3 {
-    font-size: 1.8em;
+    font-size: 1.5em;
     margin-top: 10px;
+}
+
+.turn-timer {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 12px 0 18px;
+    color: #2c3e50;
 }
 
 .video-recording, .video-player {
@@ -297,7 +311,9 @@ h1 {
 .video-recording video, .video-player video {
     width: 100%;
     max-width: 640px;
-    height: 480px;
+    height: auto;
+    max-height: 60vh;
+    aspect-ratio: 4 / 3;
     background: #000;
     border-radius: 10px;
     margin-bottom: 20px;
@@ -418,22 +434,138 @@ h1 {
 }
 
 @media (max-width: 768px) {
+    body {
+        align-items: stretch;
+    }
+
     .container {
-        padding: 20px;
-        margin: 10px;
+        padding: 16px;
+        margin: 0;
+        border-radius: 0;
+        min-height: 100vh;
     }
 
-    h1 {
-        font-size: 2em;
-    }
-
-    .video-recording video, .video-player video {
-        height: auto;
-        aspect-ratio: 4/3;
+    #gameScreen {
+        padding: 10px;
+        min-height: 100vh;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
     }
 
     .game-header {
+        padding: 8px 10px;
+        margin-bottom: 6px;
+        flex-shrink: 0;
+        border-radius: 12px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        font-size: 0.85em;
+    }
+
+    .game-header > div {
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .scoreboard {
+        padding: 6px 8px;
+        margin-bottom: 6px;
+        flex-shrink: 0;
+        border-radius: 12px;
+    }
+
+    .scoreboard h3 {
+        display: none;
+    }
+
+    #scoreboardList {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+
+    .score-item {
+        padding: 6px 10px;
+        margin: 0;
+        font-size: 0.8em;
+        border-radius: 999px;
+        flex: 0 0 auto;
+        background: white;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        border-left: none;
+        white-space: nowrap;
+    }
+
+    .score-item strong {
+        margin-left: 6px;
+    }
+
+    .score-item.current-player {
+        box-shadow: inset 0 0 0 2px #667eea;
+    }
+
+    .game-phase {
+        margin: 0;
+        padding: 6px 0 0;
+        max-width: none;
+        flex: 1;
+        display: flex;
         flex-direction: column;
-        gap: 10px;
+        overflow: hidden;
+    }
+
+    .video-recording,
+    .video-player {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
+    .video-recording video,
+    .video-player video {
+        width: 100%;
+        max-width: none;
+        height: auto;
+        max-height: 76vh;
+        aspect-ratio: 4 / 3;
+        flex: 0 0 auto;
+        margin-bottom: 10px;
+        object-fit: contain;
+    }
+
+    .recording-controls,
+    .video-counter {
+        max-width: none;
+        margin: 0;
+    }
+
+    .phrase-box,
+    .correct-phrase {
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+
+    .phrase-box h3,
+    .correct-phrase h3 {
+        font-size: 1.25em;
+    }
+
+    .round-results,
+    .final-scoreboard {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 1.9em;
     }
 }

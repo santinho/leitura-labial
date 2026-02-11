@@ -20,6 +20,27 @@ class LipReadingGame {
         this.socket = null;
         this.connected = false;
         this.ignoreSocketClose = false;
+        this.pendingRequestRecord = null;
+        this.pendingGameOver = null;
+        this.pendingReturnToLobby = false;
+        this.roundTotalsSnapshot = {};
+        this.roundGuesses = {};
+        this.roundScores = {};
+        this.resultsHoldActive = false;
+        this.resultsHoldTimer = null;
+        this.resultsHoldInterval = null;
+        this.guessingPhaseActive = false;
+        this.finalResultsActive = false;
+        this.turnTimeout = null;
+        this.turnInterval = null;
+        this.turnRemainingSeconds = 0;
+        this.autoSubmitOnStop = false;
+        this.maxTurnMs = 20000;
+        this.guessTimeout = null;
+        this.guessInterval = null;
+        this.guessRemainingSeconds = 0;
+        this.maxGuessMs = 30000;
+        this.autoPlayInProgress = false;
         this.config = {
             mockEnabled: false,
             minPlayers: 2
@@ -97,6 +118,10 @@ class LipReadingGame {
     showGameScreen() {
         this.hideAllScreens();
         document.getElementById('gameScreen').classList.remove('hidden');
+        const roomEl = document.getElementById('gameRoomCode');
+        if (roomEl) {
+            roomEl.textContent = this.roomCode || '';
+        }
     }
 
     hideAllScreens() {
@@ -239,6 +264,10 @@ class LipReadingGame {
                 this.players = payload.players || [];
                 this.isLeader = this.players.some(p => p.name === this.playerName && p.isLeader);
                 this.updateLobby();
+                const roomEl = document.getElementById('gameRoomCode');
+                if (roomEl) {
+                    roomEl.textContent = this.roomCode || '';
+                }
                 this.players.forEach(p => { this.scores[p.name] = this.scores[p.name] || 0; });
                 break;
             case 'gameStarted':
@@ -249,19 +278,11 @@ class LipReadingGame {
                 this.showWaitingPhase('Aguardando o primeiro jogador gravar o vídeo...');
                 break;
             case 'requestRecord':
-                this.currentVideoPlayer = { name: payload.player };
-                if (this.currentRound < this.totalRounds) {
-                    this.currentRound += 1;
+                if (this.resultsHoldActive) {
+                    this.pendingRequestRecord = payload;
+                    break;
                 }
-                document.getElementById('currentRound').textContent = this.currentRound;
-                document.getElementById('totalRounds').textContent = this.totalRounds;
-                this.viewCount = 0;
-                if (payload.player === this.playerName) {
-                    this.currentPhrase = this.phrases[Math.floor(Math.random() * this.phrases.length)];
-                    this.showRecordingPhase();
-                } else {
-                    this.showWaitingPhase(`Aguardando ${payload.player} gravar o vídeo...`);
-                }
+                this.handleRequestRecord(payload);
                 break;
             case 'videoAvailable':
                 this.currentVideoPlayer = { name: payload.player };
@@ -273,17 +294,33 @@ class LipReadingGame {
                     this.showWatchingPhase();
                 }
                 break;
+            case 'noVideo':
+                this.scores = payload.scores || {};
+                this.updateScoreboard();
+                this.showWaitingPhase(`Tempo esgotado! ${payload.player} não enviou vídeo. Todos ganharam +40 pontos (exceto ${payload.player}).`);
+                break;
             case 'roundComplete':
                 this.scores = payload.scores || {};
                 this.currentPhrase = payload.phrase || this.currentPhrase;
+                this.roundGuesses = payload.roundGuesses || {};
+                this.roundScores = payload.roundScores || {};
                 this.showResultsPhase();
                 break;
             case 'gameOver':
+                if (this.resultsHoldActive) {
+                    this.pendingGameOver = payload || {};
+                    break;
+                }
                 this.scores = payload || {};
+                this.finalResultsActive = true;
                 this.showFinalResults();
                 this.startReturnLobbyCountdown(10);
                 break;
             case 'returnToLobby':
+                if (this.pendingGameOver || this.resultsHoldActive || this.finalResultsActive || this.returnLobbySeconds > 0) {
+                    this.pendingReturnToLobby = true;
+                    break;
+                }
                 this.resetForLobby();
                 this.showLobbyScreen();
                 this.updateLobby();
@@ -385,6 +422,8 @@ class LipReadingGame {
         document.getElementById('gameRoomCode').textContent = this.roomCode;
         document.getElementById('currentRound').textContent = this.currentRound;
         document.getElementById('totalRounds').textContent = this.totalRounds;
+
+        this.roundTotalsSnapshot = { ...this.scores };
         
         const roundPlayerIndex = (this.currentRound - 1) % this.players.length;
         this.currentVideoPlayer = this.players[roundPlayerIndex];
@@ -406,8 +445,18 @@ class LipReadingGame {
         this.hideAllPhases();
         document.getElementById('recordingPhase').classList.remove('hidden');
         document.getElementById('phraseToRecord').textContent = this.currentPhrase;
-        
+        this.recordedChunks = [];
+        this.recordedVideoBlob = null;
+        this.autoSubmitOnStop = false;
+        this.stopTurnTimer();
+        const startBtn = document.getElementById('startRecording');
+        const stopBtn = document.getElementById('stopRecording');
+        const submitBtn = document.getElementById('submitVideo');
+        if (startBtn) startBtn.classList.remove('hidden');
+        if (stopBtn) stopBtn.classList.add('hidden');
+        if (submitBtn) submitBtn.classList.add('hidden');
         this.startCamera();
+        this.startTurnTimer();
     }
 
     async startCamera() {
@@ -441,6 +490,11 @@ class LipReadingGame {
             
             this.mediaRecorder.onstop = () => {
                 this.recordedVideoBlob = new Blob(this.recordedChunks, { type: 'video/webm' });
+                if (this.autoSubmitOnStop) {
+                    this.autoSubmitOnStop = false;
+                    this.handleAutoSubmit();
+                    return;
+                }
                 document.getElementById('submitVideo').classList.remove('hidden');
             };
             
@@ -474,10 +528,38 @@ class LipReadingGame {
         }
         
         document.getElementById('stopRecording').classList.add('hidden');
-        document.getElementById('submitVideo').classList.remove('hidden');
+        if (!this.autoSubmitOnStop) {
+            document.getElementById('submitVideo').classList.remove('hidden');
+        }
+    }
+
+    handleAutoSubmit() {
+        if (this.recordedVideoBlob && this.recordedVideoBlob.size > 0) {
+            this.submitVideo();
+            return;
+        }
+        this.handleNoVideo();
+    }
+
+    handleNoVideo() {
+        this.stopTurnTimer();
+        if (this.config.mockEnabled) {
+            this.players.forEach(player => {
+                if (player.name !== this.currentVideoPlayer.name) {
+                    this.scores[player.name] = (this.scores[player.name] || 0) + 40;
+                }
+            });
+            this.updateScoreboard();
+            this.showWaitingPhase(`Tempo esgotado! ${this.currentVideoPlayer.name} não enviou vídeo. Todos ganharam +40 pontos (exceto ${this.currentVideoPlayer.name}).`);
+            setTimeout(() => this.nextRound(), 2000);
+            return;
+        }
+        this.sendMessage('noVideo', {});
+        this.showWaitingPhase('Tempo esgotado! Nenhum vídeo enviado.');
     }
 
     submitVideo() {
+        this.stopTurnTimer();
         if (this.config.mockEnabled) {
             if (this.recordedVideoBlob) {
                 this.mockVideos[this.currentVideoPlayer.name] = URL.createObjectURL(this.recordedVideoBlob);
@@ -489,7 +571,7 @@ class LipReadingGame {
             return;
         }
 
-        if (!this.recordedVideoBlob) {
+        if (!this.recordedVideoBlob || this.recordedVideoBlob.size === 0) {
             alert('Nenhum vídeo gravado.');
             return;
         }
@@ -518,6 +600,14 @@ class LipReadingGame {
         document.getElementById('watchingPhase').classList.remove('hidden');
         document.getElementById('videoPlayerName').textContent = this.currentVideoPlayer.name;
         document.getElementById('viewCount').textContent = this.viewCount;
+        this.guessingPhaseActive = false;
+
+        const playButton = document.getElementById('playVideo');
+        if (playButton) {
+            playButton.disabled = true;
+            playButton.textContent = '▶️ Assistir';
+            playButton.classList.add('hidden');
+        }
         
         const videoElement = document.getElementById('gameVideo');
         if (this.mockVideos[this.currentVideoPlayer.name]) {
@@ -525,72 +615,87 @@ class LipReadingGame {
         } else {
             videoElement.removeAttribute('src');
         }
-        
-        if (this.viewCount >= 3) {
-            document.getElementById('playVideo').disabled = true;
-            document.getElementById('playVideo').textContent = '✓ Visualizações completas';
-            setTimeout(() => this.showGuessingPhase(), 1500);
-        }
+
+        this.startAutoPlayback();
     }
 
-    playVideo() {
-        if (this.viewCount >= 3) return;
-        
+    startAutoPlayback() {
+        if (this.autoPlayInProgress) return;
+        this.autoPlayInProgress = true;
+
         const videoElement = document.getElementById('gameVideo');
-        const hasSrc = !!videoElement.getAttribute('src');
-        const finalizeView = () => {
+        const playOnce = () => {
             if (this.viewCount >= 3) {
-                document.getElementById('playVideo').disabled = true;
-                document.getElementById('playVideo').textContent = '✓ Visualizações completas';
+                this.autoPlayInProgress = false;
                 setTimeout(() => this.showGuessingPhase(), 1500);
+                return;
+            }
+
+            const finalizeView = () => {
+                if (this.viewCount < 3) {
+                    this.viewCount += 1;
+                    document.getElementById('viewCount').textContent = this.viewCount;
+                }
+                if (this.viewCount >= 3) {
+                    this.autoPlayInProgress = false;
+                    setTimeout(() => this.showGuessingPhase(), 1500);
+                    return;
+                }
+                setTimeout(playOnce, 500);
+            };
+
+            const hasSrc = !!videoElement.getAttribute('src');
+            if (hasSrc) {
+                try {
+                    videoElement.currentTime = 0;
+                } catch (e) {}
+                videoElement.onended = () => finalizeView();
+                videoElement.play().catch(() => {
+                    setTimeout(finalizeView, 800);
+                });
+            } else if (this.config.mockEnabled) {
+                setTimeout(finalizeView, 800);
+            } else {
+                setTimeout(finalizeView, 800);
             }
         };
 
-        if (hasSrc) {
-            videoElement.play().catch(() => {
-                // Se falhar, simula o término do vídeo
-                setTimeout(finalizeView, 800);
-            });
-        } else if (this.config.mockEnabled) {
-            // No modo mock pode não haver vídeo real; simula a reprodução
-            setTimeout(finalizeView, 800);
-        }
-        this.viewCount++;
-        document.getElementById('viewCount').textContent = this.viewCount;
-
-        if (this.viewCount >= 3) {
-            finalizeView();
-        }
-        
-        videoElement.onended = () => {
-            finalizeView();
-        };
+        playOnce();
     }
 
     showGuessingPhase() {
+        if (this.guessingPhaseActive) {
+            const input = document.getElementById('guessInput');
+            if (input) input.focus();
+            return;
+        }
+        this.guessingPhaseActive = true;
         this.hideAllPhases();
         document.getElementById('guessingPhase').classList.remove('hidden');
         document.getElementById('guessInput').value = '';
         document.getElementById('guessInput').focus();
+        this.startGuessTimer();
     }
 
-    submitGuess() {
+    submitGuess(force = false) {
         const guess = document.getElementById('guessInput').value.trim();
-        if (!guess) {
+        if (!guess && !force) {
             alert('Por favor, digite sua resposta');
             return;
         }
+        this.stopGuessTimer();
 
         if (this.config.mockEnabled) {
-            const accuracy = this.calculateAccuracy(this.currentPhrase, guess);
+            const accuracy = guess ? this.calculateAccuracy(this.currentPhrase, guess) : 0;
             this.scores[this.playerName] += accuracy;
+            this.roundGuesses[this.playerName] = guess || '';
             this.showWaitingPhase('Resposta enviada! Aguardando outros jogadores...');
             setTimeout(() => {
                 this.mockOtherPlayersGuess();
                 this.showResultsPhase();
             }, 2000);
         } else {
-            this.sendMessage('submitGuess', { guess });
+            this.sendMessage('submitGuess', { guess: guess || '' });
             this.showWaitingPhase('Resposta enviada! Aguardando outros jogadores...');
         }
     }
@@ -600,8 +705,17 @@ class LipReadingGame {
             if (player.name !== this.playerName && player.name !== this.currentVideoPlayer.name) {
                 const randomAccuracy = Math.floor(Math.random() * 70) + 10;
                 this.scores[player.name] += randomAccuracy;
+                this.roundGuesses[player.name] = this.generateMockGuess();
             }
         });
+    }
+
+    generateMockGuess() {
+        if (!this.currentPhrase) return '...';
+        const words = this.currentPhrase.split(' ');
+        if (words.length <= 2) return this.currentPhrase;
+        const cut = Math.max(2, Math.floor(words.length * 0.6));
+        return words.slice(0, cut).join(' ');
     }
 
     calculateAccuracy(correct, guess) {
@@ -625,34 +739,134 @@ class LipReadingGame {
         
         const resultsList = document.getElementById('roundResultsList');
         resultsList.innerHTML = '';
+
+        const roundDeltas = this.computeRoundDeltas(this.scores);
         
         const sortedPlayers = [...this.players]
-            .filter(p => p.name !== this.currentVideoPlayer.name)
-            .sort((a, b) => (this.scores[b.name] || 0) - (this.scores[a.name] || 0));
+            .sort((a, b) => (roundDeltas[b.name] || 0) - (roundDeltas[a.name] || 0));
         
         sortedPlayers.forEach(player => {
             const resultDiv = document.createElement('div');
             resultDiv.className = 'result-item';
-            resultDiv.innerHTML = `
-                <div>
-                    <strong>${player.name}</strong>
-                    <p class="accuracy">Pontuação: ${this.scores[player.name] || 0} pontos</p>
-                </div>
-            `;
+
+            const nameEl = document.createElement('strong');
+            nameEl.textContent = player.name;
+
+            const guessEl = document.createElement('p');
+            guessEl.className = 'guess';
+            const isRecorder = this.currentVideoPlayer && player.name === this.currentVideoPlayer.name;
+            const guessText = isRecorder ? 'Gravou o vídeo' : (this.roundGuesses[player.name] || '—');
+            guessEl.textContent = `Chute: ${guessText}`;
+
+            const pointsEl = document.createElement('p');
+            pointsEl.className = 'accuracy';
+            pointsEl.textContent = `Pontos da rodada: ${roundDeltas[player.name] || 0}`;
+
+            resultDiv.appendChild(nameEl);
+            resultDiv.appendChild(guessEl);
+            resultDiv.appendChild(pointsEl);
+
+            if (isRecorder) {
+                const recorderScores = this.players
+                    .filter(p => p.name !== player.name)
+                    .map(p => this.roundScores[p.name] || 0);
+                const totalBonus = recorderScores.reduce((sum, val) => sum + val, 0);
+                const breakdown = recorderScores.length ? recorderScores.map(val => `+${val}`).join(' ') : '+0';
+                const bonusEl = document.createElement('p');
+                bonusEl.className = 'accuracy';
+                bonusEl.textContent = `Bônus: ${breakdown} = ${totalBonus}`;
+                resultDiv.appendChild(bonusEl);
+            }
             resultsList.appendChild(resultDiv);
         });
         
         this.updateScoreboard();
-        
-        if (this.config.mockEnabled) {
-            if (this.currentRound >= this.totalRounds) {
-                document.getElementById('continueGame').textContent = 'Ver Resultado Final';
-            } else {
-                document.getElementById('continueGame').textContent = 'Próxima Rodada';
-            }
-        } else {
-            document.getElementById('continueGame').textContent = 'Aguardar Próxima Rodada';
+
+        this.startResultsHold();
+    }
+
+    handleRequestRecord(payload) {
+        this.currentVideoPlayer = { name: payload.player };
+        if (this.currentRound < this.totalRounds) {
+            this.currentRound += 1;
         }
+        document.getElementById('currentRound').textContent = this.currentRound;
+        document.getElementById('totalRounds').textContent = this.totalRounds;
+        this.viewCount = 0;
+
+        this.roundTotalsSnapshot = { ...this.scores };
+
+        if (payload.player === this.playerName) {
+            this.currentPhrase = this.phrases[Math.floor(Math.random() * this.phrases.length)];
+            this.showRecordingPhase();
+        } else {
+            this.showWaitingPhase(`Aguardando ${payload.player} gravar o vídeo...`);
+        }
+    }
+
+    computeRoundDeltas(totalScores) {
+        const deltas = {};
+        this.players.forEach(player => {
+            const before = this.roundTotalsSnapshot[player.name] || 0;
+            const after = totalScores[player.name] || 0;
+            deltas[player.name] = Math.max(0, after - before);
+        });
+        return deltas;
+    }
+
+    startResultsHold() {
+        this.resultsHoldActive = true;
+        if (this.resultsHoldTimer) {
+            clearTimeout(this.resultsHoldTimer);
+            this.resultsHoldTimer = null;
+        }
+        if (this.resultsHoldInterval) {
+            clearInterval(this.resultsHoldInterval);
+            this.resultsHoldInterval = null;
+        }
+
+        const button = document.getElementById('continueGame');
+        let remaining = 8;
+        if (button) {
+            button.disabled = true;
+            button.textContent = `Próxima gravação em ${remaining}s`;
+        }
+
+        this.resultsHoldInterval = setInterval(() => {
+            remaining -= 1;
+            if (remaining <= 0) return;
+            if (button) {
+                button.textContent = `Próxima gravação em ${remaining}s`;
+            }
+        }, 1000);
+
+        this.resultsHoldTimer = setTimeout(() => {
+            if (this.resultsHoldInterval) {
+                clearInterval(this.resultsHoldInterval);
+                this.resultsHoldInterval = null;
+            }
+            this.resultsHoldActive = false;
+            if (this.config.mockEnabled) {
+                this.nextRound();
+                return;
+            }
+            if (this.pendingGameOver) {
+                this.scores = this.pendingGameOver;
+                this.pendingGameOver = null;
+                this.showFinalResults();
+                this.startReturnLobbyCountdown(10);
+                return;
+            }
+            if (this.pendingRequestRecord) {
+                const pending = this.pendingRequestRecord;
+                this.pendingRequestRecord = null;
+                this.handleRequestRecord(pending);
+                return;
+            }
+            if (button) {
+                button.textContent = 'Aguardando próxima rodada...';
+            }
+        }, 8000);
     }
 
     nextRound() {
@@ -697,6 +911,11 @@ class LipReadingGame {
     updateScoreboard() {
         const scoreboard = document.getElementById('scoreboardList');
         scoreboard.innerHTML = '';
+
+        const playerCountEl = document.getElementById('gamePlayerCount');
+        if (playerCountEl) {
+            playerCountEl.textContent = this.players.length;
+        }
         
         const sortedPlayers = [...this.players].sort((a, b) => (this.scores[b.name] || 0) - (this.scores[a.name] || 0));
         
@@ -730,6 +949,12 @@ class LipReadingGame {
             if (this.returnLobbySeconds <= 0) {
                 clearInterval(this.returnLobbyTimer);
                 this.returnLobbyTimer = null;
+                if (this.pendingReturnToLobby) {
+                    this.pendingReturnToLobby = false;
+                    this.resetForLobby();
+                    this.showLobbyScreen();
+                    this.updateLobby();
+                }
                 return;
             }
             this.updateReturnLobbyLabel();
@@ -751,6 +976,21 @@ class LipReadingGame {
             clearInterval(this.returnLobbyTimer);
             this.returnLobbyTimer = null;
         }
+        if (this.resultsHoldTimer) {
+            clearTimeout(this.resultsHoldTimer);
+            this.resultsHoldTimer = null;
+        }
+        if (this.resultsHoldInterval) {
+            clearInterval(this.resultsHoldInterval);
+            this.resultsHoldInterval = null;
+        }
+        this.stopTurnTimer();
+        this.stopGuessTimer();
+        this.resultsHoldActive = false;
+        this.pendingRequestRecord = null;
+        this.pendingGameOver = null;
+        this.pendingReturnToLobby = false;
+        this.finalResultsActive = false;
         this.returnLobbySeconds = 0;
         this.currentRound = 0;
         this.totalRounds = 0;
@@ -785,6 +1025,105 @@ class LipReadingGame {
         this.currentVideoPlayer = null;
         this.viewCount = 0;
         this.mockVideos = {};
+        this.pendingRequestRecord = null;
+        this.pendingGameOver = null;
+        this.pendingReturnToLobby = false;
+        this.roundTotalsSnapshot = {};
+        this.roundGuesses = {};
+        this.roundScores = {};
+        this.resultsHoldActive = false;
+        this.guessingPhaseActive = false;
+        this.finalResultsActive = false;
+        this.turnTimeout = null;
+        this.turnInterval = null;
+        this.turnRemainingSeconds = 0;
+        this.autoSubmitOnStop = false;
+        this.stopGuessTimer();
+        this.guessRemainingSeconds = 0;
+        this.guessTimeout = null;
+        this.guessInterval = null;
+        this.guessRemainingSeconds = 0;
+        this.autoPlayInProgress = false;
+    }
+
+    startGuessTimer() {
+        this.stopGuessTimer();
+        this.guessRemainingSeconds = Math.ceil(this.maxGuessMs / 1000);
+        const timerEl = document.getElementById('guessTimer');
+        if (timerEl) {
+            timerEl.textContent = this.guessRemainingSeconds;
+        }
+        this.guessInterval = setInterval(() => {
+            this.guessRemainingSeconds -= 1;
+            if (timerEl) {
+                timerEl.textContent = Math.max(this.guessRemainingSeconds, 0);
+            }
+            if (this.guessRemainingSeconds <= 0 && this.guessInterval) {
+                clearInterval(this.guessInterval);
+                this.guessInterval = null;
+            }
+        }, 1000);
+        this.guessTimeout = setTimeout(() => this.handleGuessTimeout(), this.maxGuessMs);
+    }
+
+    stopGuessTimer() {
+        if (this.guessTimeout) {
+            clearTimeout(this.guessTimeout);
+            this.guessTimeout = null;
+        }
+        if (this.guessInterval) {
+            clearInterval(this.guessInterval);
+            this.guessInterval = null;
+        }
+    }
+
+    handleGuessTimeout() {
+        this.submitGuess(true);
+    }
+
+    startTurnTimer() {
+        this.stopTurnTimer();
+        this.turnRemainingSeconds = Math.ceil(this.maxTurnMs / 1000);
+        const timerEl = document.getElementById('recordingTimer');
+        if (timerEl) {
+            timerEl.textContent = this.turnRemainingSeconds;
+        }
+        this.turnInterval = setInterval(() => {
+            this.turnRemainingSeconds -= 1;
+            if (timerEl) {
+                timerEl.textContent = Math.max(this.turnRemainingSeconds, 0);
+            }
+            if (this.turnRemainingSeconds <= 0 && this.turnInterval) {
+                clearInterval(this.turnInterval);
+                this.turnInterval = null;
+            }
+        }, 1000);
+        this.turnTimeout = setTimeout(() => this.handleTurnTimeout(), this.maxTurnMs);
+    }
+
+    stopTurnTimer() {
+        if (this.turnTimeout) {
+            clearTimeout(this.turnTimeout);
+            this.turnTimeout = null;
+        }
+        if (this.turnInterval) {
+            clearInterval(this.turnInterval);
+            this.turnInterval = null;
+        }
+    }
+
+    handleTurnTimeout() {
+        this.stopTurnTimer();
+        if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+            this.autoSubmitOnStop = true;
+            this.stopRecording();
+            return;
+        }
+        if (this.recordedVideoBlob && this.recordedVideoBlob.size > 0) {
+            this.submitVideo();
+            return;
+        }
+        this.handleNoVideo();
     }
 }
 

@@ -5,17 +5,36 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import java.nio.ByteBuffer;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
 public class RoomManager {
     private final Map<String, Room> rooms = new ConcurrentHashMap<>();
     private final ObjectMapper mapper = new ObjectMapper();
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private static final long PONG_TIMEOUT_MS = 30_000;
+    private static final long PING_INTERVAL_MS = 10_000;
 
     @ConfigProperty(name = "game.min-players", defaultValue = "2")
     int minPlayers;
+
+    @PostConstruct
+    void startPingLoop() {
+        scheduler.scheduleAtFixedRate(this::pingAndCleanup, PING_INTERVAL_MS, PING_INTERVAL_MS, TimeUnit.MILLISECONDS);
+    }
+
+    @PreDestroy
+    void stopPingLoop() {
+        scheduler.shutdownNow();
+    }
 
     public void joinRoom(String roomId, Session session) {
         Room room = rooms.computeIfAbsent(roomId, Room::new);
@@ -59,6 +78,9 @@ public class RoomManager {
                 case "uploadVideo":
                     room.handleUpload(session, msg.payload);
                     break;
+                case "noVideo":
+                    room.handleNoVideo(session, minPlayers);
+                    break;
                 case "submitGuess":
                     room.handleGuess(session, msg.payload, minPlayers);
                     break;
@@ -70,11 +92,58 @@ public class RoomManager {
         }
     }
 
+    public void handlePong(String roomId, Session session) {
+        Room room = rooms.get(roomId);
+        if (room == null) return;
+        room.markPong(session);
+    }
+
+    private void pingAndCleanup() {
+        long now = System.currentTimeMillis();
+        for (Map.Entry<String, Room> entry : rooms.entrySet()) {
+            Room room = entry.getValue();
+            boolean changed = false;
+            for (Session session : new ArrayList<>(room.players.keySet())) {
+                if (!session.isOpen()) {
+                    room.removePlayer(session);
+                    changed = true;
+                    continue;
+                }
+                long lastPong = room.lastPong.getOrDefault(session, now);
+                if (now - lastPong > PONG_TIMEOUT_MS) {
+                    try {
+                        session.close();
+                    } catch (IOException ignored) {}
+                    room.removePlayer(session);
+                    changed = true;
+                    continue;
+                }
+                try {
+                    session.getAsyncRemote().sendPing(ByteBuffer.wrap(new byte[] { 1 }));
+                } catch (Exception e) {
+                    try {
+                        session.close();
+                    } catch (IOException ignored) {}
+                    room.removePlayer(session);
+                    changed = true;
+                }
+            }
+            if (room.isEmpty()) {
+                rooms.remove(entry.getKey());
+                continue;
+            }
+            if (changed) {
+                room.sendRoster(minPlayers);
+            }
+        }
+    }
+
     private static class Room {
         final String id;
         final Map<Session, Player> players = new ConcurrentHashMap<>();
         final List<Session> joinOrder = Collections.synchronizedList(new ArrayList<>());
         final Queue<Session> turnQueue = new LinkedList<>();
+        final Map<Session, Long> lastPong = new ConcurrentHashMap<>();
 
         boolean gameStarted = false;
         Session currentRecorderSession = null;
@@ -90,17 +159,25 @@ public class RoomManager {
             Player player = new Player(name, leader);
             players.put(session, player);
             joinOrder.add(session);
+            lastPong.put(session, System.currentTimeMillis());
         }
 
         void removePlayer(Session session) {
             Player removed = players.remove(session);
             joinOrder.remove(session);
+            lastPong.remove(session);
             if (removed != null && removed.isLeader) {
                 promoteNextLeader();
             }
         }
 
         boolean isEmpty() { return players.isEmpty(); }
+
+        void markPong(Session session) {
+            if (players.containsKey(session)) {
+                lastPong.put(session, System.currentTimeMillis());
+            }
+        }
 
         void setPlayerName(Session session, String desiredName) {
             Player player = players.get(session);
@@ -232,14 +309,39 @@ public class RoomManager {
             }
         }
 
+        void handleNoVideo(Session session, int minPlayers) {
+            if (session != currentRecorderSession) return;
+            Player recorder = players.get(session);
+            if (recorder == null) return;
+
+            for (Player player : players.values()) {
+                if (player == recorder) continue;
+                player.score += 40;
+            }
+
+            guesses.remove(currentRecorderSession);
+            currentPhrase = null;
+
+            try {
+                Map<String, Object> result = new HashMap<>();
+                result.put("player", recorder.name);
+                result.put("scores", scoresMap());
+                sendToAll(Message.of("noVideo", new ObjectMapper().writeValueAsString(result)));
+            } catch (Exception ignored) {}
+
+            requestNextRecorder(minPlayers);
+        }
+
         void scoreRound(Session recorderSession) {
             List<Guess> list = guesses.getOrDefault(recorderSession, Collections.emptyList());
             String correct = currentPhrase != null ? currentPhrase : "";
 
             Map<String, Integer> roundScores = new HashMap<>();
+            Map<String, String> roundGuesses = new HashMap<>();
             for (Guess entry : list) {
                 int score = calculateSimilarity(correct.toLowerCase(), entry.guess.toLowerCase());
                 roundScores.put(entry.playerName, score);
+                roundGuesses.put(entry.playerName, entry.guess);
                 for (Player player : players.values()) {
                     if (player.name.equals(entry.playerName)) {
                         player.score += score;
@@ -249,7 +351,7 @@ public class RoomManager {
             }
 
             Player recorder = players.get(recorderSession);
-            int recorderBonus = roundScores.values().stream().mapToInt(Integer::intValue).sum() / 10;
+            int recorderBonus = roundScores.values().stream().mapToInt(Integer::intValue).sum();
             if (recorder != null) recorder.score += recorderBonus;
 
             try {
@@ -257,6 +359,7 @@ public class RoomManager {
                 result.put("scores", scoresMap());
                 result.put("phrase", correct);
                 result.put("roundScores", roundScores);
+                result.put("roundGuesses", roundGuesses);
                 sendToAll(Message.of("roundComplete", new ObjectMapper().writeValueAsString(result)));
             } catch (Exception ignored) {}
         }

@@ -5,6 +5,7 @@ import jakarta.websocket.OnError;
 import jakarta.websocket.OnMessage;
 import jakarta.websocket.OnOpen;
 import jakarta.websocket.Session;
+import jakarta.websocket.PongMessage;
 import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 import jakarta.inject.Inject;
@@ -29,6 +30,11 @@ public class GameSocket {
     public void onMessage(Session session, String message, @PathParam("room") String room) {
         // message is JSON; hand off to RoomManager
         manager.handleMessage(room, session, message);
+    }
+
+    @OnMessage
+    public void onPong(PongMessage message, Session session, @PathParam("room") String room) {
+        manager.handlePong(room, session);
     }
 
     @OnClose

@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leitura Labial - Party Game</title>
     
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20260211a">
 </head>
 <body>
     <div id="loginScreen" class="screen">
@@ -55,6 +55,9 @@
             <div class="round-info">
                 <span>Rodada: <strong id="currentRound">1</strong>/<strong id="totalRounds">0</strong></span>
             </div>
+            <div class="players-info">
+                <span>Jogadores: <strong id="gamePlayerCount">0</strong></span>
+            </div>
         </div>
 
         <div class="scoreboard">
@@ -63,11 +66,11 @@
         </div>
 
         <div id="recordingPhase" class="game-phase hidden">
-            <h2>É sua vez de gravar!</h2>
             <div class="phrase-box">
-                <p>Fale a seguinte frase:</p>
+                <p>É sua vez de gravar! Fale a seguinte frase:</p>
                 <h3 id="phraseToRecord"></h3>
             </div>
+            <div class="turn-timer">Tempo restante: <strong id="recordingTimer">20</strong>s</div>
             <div class="video-recording">
                 <video id="recordPreview" autoplay muted playsinline></video>
                 <div class="recording-controls">
@@ -99,6 +102,7 @@
         <div id="guessingPhase" class="game-phase hidden">
             <h2>O que foi dito?</h2>
             <p>Digite sua resposta:</p>
+            <div class="turn-timer">Tempo restante: <strong id="guessTimer">30</strong>s</div>
             <div class="guess-input">
                 <input type="text" id="guessInput" placeholder="Digite o que você acha que foi dito..." maxlength="100">
                 <button id="submitGuess" class="btn-primary">Enviar Resposta</button>
@@ -129,10 +133,11 @@
                 <h4>Placar Final:</h4>
                 <div id="finalScoreboardList"></div>
             </div>
+            <p id="returnLobbyLabel" class="return-lobby-label"></p>
             <button id="backToLobby" class="btn-primary">Voltar ao Lobby</button>
         </div>
     </div>
 
-    <script src="script.js?v=20260209b"></script>
+    <script src="script.js?v=20260211a"></script>
 </body>
 </html>
