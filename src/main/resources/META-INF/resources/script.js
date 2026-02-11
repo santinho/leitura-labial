@@ -47,14 +47,106 @@ class LipReadingGame {
         };
         
         this.phrases = [
-            "O cachorro late à noite na rua",
-            "A lua brilha forte no céu azul",
-            "Café quente faz bem pela manhã cedo",
-            "Vamos passear no parque amanhã de tarde",
-            "O livro está na mesa da sala",
-            "Gosto muito de pizza com queijo derretido",
-            "O sol nasce cedo todos os dias",
-            "Adoro caminhar na praia ao entardecer"
+            "O pato pediu um pix para a lagoa",
+            "Minha planta pediu férias e foi pra sombra",
+            "O gato acha que é gerente do sofá",
+            "A geladeira faz dieta de madrugada",
+            "O Wi-Fi some quando a visita chega",
+            "O cachorro assistiu novela e chorou",
+            "Meu relógio atrasa de propósito",
+            "O teclado engoliu uma letra e fugiu",
+            "A cadeira range porque tem segredos",
+            "A pizza chegou fria e filosofou",
+            "O celular tem ciúmes do carregador",
+            "O ventilador virou DJ no calor",
+            "A torradeira aplaudiu meu pão",
+            "Meu guarda-chuva perdeu o voo",
+            "O elevador pensa que é montanha-russa",
+            "A meia sumida abriu uma startup",
+            "O controle remoto tirou folga",
+            "O abacate fez yoga na salada",
+            "O leite fugiu do cereal apavorado",
+            "A caneta acabou a tinta no autógrafo",
+            "O espelho acordou de mau humor",
+            "O micro-ondas apitou só para conversar",
+            "Minha mochila tem GPS e sumiu",
+            "O travesseiro roubou meu despertador",
+            "A janela cochichou com o vento",
+            "Meu café fez reunião com o açúcar",
+            "O peixe pediu Uber para o aquário",
+            "A banana escorregou de propósito",
+            "O sapato chiou porque estava tímido",
+            "O bolo pediu bis, já era o primeiro",
+            "A televisão piscou e contou piada",
+            "O carregador se esconde quando preciso",
+            "A bicicleta ficou com medo da ladeira",
+            "A panela fez greve e não quis ferver",
+            "O livro riu da própria capa",
+            "O mouse fugiu do tapete",
+            "A campainha tocou sozinha e pediu desculpas",
+            "O sorvete derreteu de ansiedade",
+            "O pente falou que hoje é dia de folga",
+            "A luz piscou para me dar bom dia",
+            "O chinelo pediu férias do piso",
+            "O sofá engoliu uma pipoca e sorriu",
+            "A tomada bocejou quando liguei a TV",
+            "O casaco ficou com frio no armário",
+            "O caderno guardou segredo na última página",
+            "A mochila fez alongamento antes da escola",
+            "O travesseiro pediu café e mais cinco minutos",
+            "A colher dançou com o copo",
+            "O fogão piscou e apagou por timidez",
+            "A borracha apagou a própria autoestima",
+            "O lápis ficou ponta-cabeça",
+            "A régua se achou por estar alinhada",
+            "O quadro branco ficou ofendido com o marcador",
+            "O teclado pediu silêncio para digitar",
+            "O grampo fugiu do papel",
+            "A gaveta engoliu as chaves e fez mistério",
+            "O lençol virou capa de super-herói",
+            "O relógio despertou antes do sol",
+            "A escova de dentes cantou no banho",
+            "O shampoo fez espuma de festa",
+            "A toalha deu tchau para a secadora",
+            "O espremedor espirrou suco",
+            "O copo tropeçou na mesa",
+            "A panela de pressão contou fofoca",
+            "O garfo se perdeu na gaveta",
+            "A frigideira chiou porque estava brava",
+            "O liquidificador quis virar ventilador",
+            "O sabão fez bolhas de alegria",
+            "A vassoura virou microfone",
+            "O tapete fingiu ser grama",
+            "A cortina fez cosplay de fantasma",
+            "O varal pendurou minhas ideias",
+            "A bicicleta tirou selfie com a rua",
+            "O pneu cansou da subida",
+            "O patins pediu capacete emprestado",
+            "O quadro de fotos piscou para mim",
+            "A almofada contou piada interna",
+            "O rádio sussurrou uma música antiga",
+            "A lâmpada teve um insight",
+            "O ar-condicionado fez sauna",
+            "A rua pediu silêncio para dormir",
+            "O semáforo piscou em ritmo de festa",
+            "A calçada tropeçou no meu passo",
+            "O elevador fez amizade com o térreo",
+            "O escorredor chorou por estar cheio",
+            "A chaleira apitou um segredo",
+            "O freezer sonhou com o verão",
+            "A pia cantou desafinada",
+            "O espelho tirou minha foto mental",
+            "O calendário pulou um dia de preguiça",
+            "O despertador brigou com o soneca",
+            "O livro abriu boquinha para bocejar",
+            "A mochila fez check-in na porta",
+            "O ferro passou de raiva",
+            "A sandália pediu pra ir de carro",
+            "O ventilador fez vento tímido",
+            "A janela abriu um sorriso",
+            "O chuveiro ficou com medo do frio",
+            "A tomada pediu desculpas pelo choque",
+            "O microfone ficou rouco sem show"
         ];
         
         this.initializeEventListeners();
@@ -89,7 +181,6 @@ class LipReadingGame {
         
         document.getElementById('startRecording').addEventListener('click', () => this.startRecording());
         document.getElementById('stopRecording').addEventListener('click', () => this.stopRecording());
-        document.getElementById('submitVideo').addEventListener('click', () => this.submitVideo());
         
         document.getElementById('playVideo').addEventListener('click', () => this.playVideo());
         document.getElementById('submitGuess').addEventListener('click', () => this.submitGuess());
@@ -451,10 +542,8 @@ class LipReadingGame {
         this.stopTurnTimer();
         const startBtn = document.getElementById('startRecording');
         const stopBtn = document.getElementById('stopRecording');
-        const submitBtn = document.getElementById('submitVideo');
         if (startBtn) startBtn.classList.remove('hidden');
         if (stopBtn) stopBtn.classList.add('hidden');
-        if (submitBtn) submitBtn.classList.add('hidden');
         this.startCamera();
         this.startTurnTimer();
     }
@@ -495,7 +584,7 @@ class LipReadingGame {
                     this.handleAutoSubmit();
                     return;
                 }
-                document.getElementById('submitVideo').classList.remove('hidden');
+                this.submitVideo();
             };
             
             this.mediaRecorder.start();
@@ -514,7 +603,7 @@ class LipReadingGame {
         
         setTimeout(() => {
             document.getElementById('stopRecording').classList.add('hidden');
-            document.getElementById('submitVideo').classList.remove('hidden');
+            this.submitVideo();
         }, 2000);
     }
 
@@ -528,8 +617,8 @@ class LipReadingGame {
         }
         
         document.getElementById('stopRecording').classList.add('hidden');
-        if (!this.autoSubmitOnStop) {
-            document.getElementById('submitVideo').classList.remove('hidden');
+        if (!this.autoSubmitOnStop && !this.mediaRecorder) {
+            this.submitVideo();
         }
     }
 
