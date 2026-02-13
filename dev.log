@@ -96,3 +96,27 @@ Caused by: java.lang.IllegalStateException: Instance already destroyed
 	at io.undertow.websockets.ServerWebSocketContainer.invokeEndpointMethod(ServerWebSocketContainer.java:536)
 	... 8 more
 
+2026-02-13 01:03:41,580 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.008s 
+2026-02-13 01:05:10,338 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.005s 
+2026-02-13 01:05:10,609 ERROR [org.jbo.thr.errors] (executor-thread-42) Thread Thread[executor-thread-42,5,main] threw an uncaught exception: java.lang.RuntimeException: java.lang.IllegalStateException: Instance already destroyed
+	at io.undertow.websockets.ServerWebSocketContainer.invokeEndpointMethod(ServerWebSocketContainer.java:538)
+	at io.undertow.websockets.ServerWebSocketContainer$6.run(ServerWebSocketContainer.java:518)
+	at io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:581)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)
+	at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)
+	at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: java.lang.IllegalStateException: Instance already destroyed
+	at io.quarkus.arc.impl.AbstractInstanceHandle.get(AbstractInstanceHandle.java:44)
+	at io.quarkus.arc.runtime.BeanContainerImpl$1$1.get(BeanContainerImpl.java:50)
+	at io.quarkus.websockets.client.runtime.WebsocketCoreRecorder$1$1$1.getInstance(WebsocketCoreRecorder.java:136)
+	at io.undertow.websockets.annotated.AnnotatedEndpoint$5.run(AnnotatedEndpoint.java:225)
+	at io.undertow.websockets.ServerWebSocketContainer$1.call(ServerWebSocketContainer.java:143)
+	at io.undertow.websockets.ServerWebSocketContainer$1.call(ServerWebSocketContainer.java:140)
+	at io.quarkus.websockets.client.runtime.WebsocketCoreRecorder$4$1.call(WebsocketCoreRecorder.java:181)
+	at io.undertow.websockets.ServerWebSocketContainer.invokeEndpointMethod(ServerWebSocketContainer.java:536)
+	... 8 more
+
+2026-02-13 01:06:38,551 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.012s 

@@ -341,10 +341,10 @@ h1 {
 .game-header .room-info {
     font-family: "Fredoka", sans-serif;
     font-weight: 700;
+    color: hsl(var(--primary-foreground));
 }
 
-.game-header .room-info strong,
-.game-header .room-info span {
+#lobbyScreen h1 span#lobbyRoomCode {
     background: var(--gradient-party);
     -webkit-background-clip: text;
     background-clip: text;
@@ -606,9 +606,9 @@ h1 {
 
 @keyframes heartbeat {
     0%, 100% { transform: scale(1); }
-    20% { transform: scale(1.04); }
-    40% { transform: scale(0.98); }
-    60% { transform: scale(1.05); }
+    20% { transform: scale(1.3); }
+    40% { transform: scale(0.95); }
+    60% { transform: scale(1.5); }
     80% { transform: scale(1); }
 }
 
