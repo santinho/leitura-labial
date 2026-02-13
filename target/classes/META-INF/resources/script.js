@@ -41,6 +41,12 @@ class LipReadingGame {
         this.guessRemainingSeconds = 0;
         this.maxGuessMs = 30000;
         this.autoPlayInProgress = false;
+        this.playerIcons = {};
+        this.availableIcons = [
+            "🦊","🐼","🐸","🦄","🐯","🐵","🐙","🐳","🦁","🐶",
+            "🐱","🐹","🐰","🐨","🦉","🐧","🐢","🦋","🐝","🦕",
+            "🐬","🐟","🦩","🦜","🐲","🐻","🦓","🐴","🦔","🐺"
+        ];
         this.config = {
             mockEnabled: false,
             minPlayers: 2
@@ -466,6 +472,7 @@ class LipReadingGame {
         switch (msg.type) {
             case 'roster':
                 this.players = payload.players || [];
+                this.syncPlayerIcons();
                 this.isLeader = this.players.some(p => p.name === this.playerName && p.isLeader);
                 this.updateLobby();
                 const roomEl = document.getElementById('gameRoomCode');
@@ -549,6 +556,7 @@ class LipReadingGame {
                         isLeader: false 
                     });
                     this.scores[newName] = 0;
+                    this.assignIconIfNeeded(newName);
                     this.updateLobby();
                 }
             }
@@ -565,6 +573,7 @@ class LipReadingGame {
                         isLeader: false 
                     });
                     this.scores[newName] = 0;
+                    this.assignIconIfNeeded(newName);
                     this.updateLobby();
                 }
             }
@@ -590,8 +599,9 @@ class LipReadingGame {
         this.players.forEach(player => {
             const playerDiv = document.createElement('div');
             playerDiv.className = 'player-item' + (player.isLeader ? ' leader' : '');
+            const icon = this.getPlayerIcon(player.name);
             playerDiv.innerHTML = `
-                <span>${player.name} ${player.isLeader ? '👑' : ''}</span>
+                <span>${icon} ${player.name} ${player.isLeader ? '👑' : ''}</span>
             `;
             playersList.appendChild(playerDiv);
         });
@@ -938,6 +948,7 @@ class LipReadingGame {
         this.hideAllPhases();
         document.getElementById('resultsPhase').classList.remove('hidden');
         document.getElementById('correctPhrase').textContent = this.currentPhrase;
+        this.showLaughBurst();
         
         const resultsList = document.getElementById('roundResultsList');
         resultsList.innerHTML = '';
@@ -952,13 +963,14 @@ class LipReadingGame {
             resultDiv.className = 'result-item';
 
             const nameEl = document.createElement('strong');
-            nameEl.textContent = player.name;
+            const icon = this.getPlayerIcon(player.name);
+            nameEl.textContent = `${icon} ${player.name}`;
 
             const guessEl = document.createElement('p');
             guessEl.className = 'guess';
             const isRecorder = this.currentVideoPlayer && player.name === this.currentVideoPlayer.name;
             const guessText = isRecorder ? 'Gravou o vídeo' : (this.roundGuesses[player.name] || '—');
-            guessEl.textContent = `Chute: ${guessText}`;
+            guessEl.textContent = `"${guessText}"`;
 
             const pointsEl = document.createElement('p');
             pointsEl.className = 'accuracy';
@@ -985,6 +997,29 @@ class LipReadingGame {
         this.updateScoreboard();
 
         this.startResultsHold();
+    }
+
+    showLaughBurst() {
+        const container = document.getElementById('laughBurst');
+        if (!container) return;
+        container.innerHTML = '';
+        const count = 18;
+        const emojis = ["😂", "🤣", "😆", "😹"];
+        for (let i = 0; i < count; i++) {
+            const el = document.createElement('span');
+            el.className = 'laugh-emoji';
+            el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            const left = Math.random() * 100;
+            const top = Math.random() * 100;
+            const delay = Math.random() * 0.8;
+            el.style.left = `${left}%`;
+            el.style.top = `${top}%`;
+            el.style.animationDelay = `${delay}s`;
+            container.appendChild(el);
+        }
+        setTimeout(() => {
+            if (container) container.innerHTML = '';
+        }, 4200);
     }
 
     handleRequestRecord(payload) {
@@ -1091,17 +1126,22 @@ class LipReadingGame {
         const sortedPlayers = [...this.players].sort((a, b) => (this.scores[b.name] || 0) - (this.scores[a.name] || 0));
         const winner = sortedPlayers[0];
         
-        document.getElementById('winnerName').textContent = `🏆 ${winner.name} Venceu!`;
+        const winnerIcon = this.getPlayerIcon(winner.name);
+        const winnerNameEl = document.getElementById('winnerName');
+        if (winnerNameEl) {
+            winnerNameEl.innerHTML = `<span class="winner-title">🏆 ${winnerIcon} Campeão</span><span class="winner-player">${winner.name}</span>`;
+        }
         document.getElementById('winnerScore').textContent = `${this.scores[winner.name] || 0} pontos`;
         
         const finalScoreboard = document.getElementById('finalScoreboardList');
         finalScoreboard.innerHTML = '';
         
         sortedPlayers.forEach((player, index) => {
+            const icon = this.getPlayerIcon(player.name);
             const scoreDiv = document.createElement('div');
             scoreDiv.className = 'score-item';
             scoreDiv.innerHTML = `
-                <span>${index + 1}º - ${player.name}</span>
+                <span>${index + 1}º - ${icon} ${player.name}</span>
                 <strong>${this.scores[player.name] || 0} pontos</strong>
             `;
             finalScoreboard.appendChild(scoreDiv);
@@ -1124,8 +1164,9 @@ class LipReadingGame {
         sortedPlayers.forEach(player => {
             const scoreDiv = document.createElement('div');
             scoreDiv.className = 'score-item' + (player.name === this.playerName ? ' current-player' : '');
+            const icon = this.getPlayerIcon(player.name);
             scoreDiv.innerHTML = `
-                <span>${player.name}</span>
+                <span>${icon} ${player.name}</span>
                 <strong>${this.scores[player.name] || 0} pts</strong>
             `;
             scoreboard.appendChild(scoreDiv);
@@ -1194,6 +1235,7 @@ class LipReadingGame {
         this.pendingReturnToLobby = false;
         this.finalResultsActive = false;
         this.returnLobbySeconds = 0;
+        this.playerIcons = {};
         this.currentRound = 0;
         this.totalRounds = 0;
         this.scores = {};
@@ -1236,6 +1278,12 @@ class LipReadingGame {
         this.resultsHoldActive = false;
         this.guessingPhaseActive = false;
         this.finalResultsActive = false;
+        this.playerIcons = {};
+        this.availableIcons = [
+            "🦊","🐼","🐸","🦄","🐯","🐵","🐙","🐳","🦁","🐶",
+            "🐱","🐹","🐰","🐨","🦉","🐧","🐢","🦋","🐝","🦕",
+            "🐬","🐟","🦩","🦜","🐲","🐻","🦓","🐴","🦔","🐺"
+        ];
         this.turnTimeout = null;
         this.turnInterval = null;
         this.turnRemainingSeconds = 0;
@@ -1246,6 +1294,32 @@ class LipReadingGame {
         this.guessInterval = null;
         this.guessRemainingSeconds = 0;
         this.autoPlayInProgress = false;
+    }
+
+    syncPlayerIcons() {
+        const currentNames = new Set(this.players.map(p => p.name));
+        Object.keys(this.playerIcons).forEach(name => {
+            if (!currentNames.has(name)) {
+                delete this.playerIcons[name];
+            }
+        });
+        this.players.forEach(player => this.assignIconIfNeeded(player.name));
+    }
+
+    assignIconIfNeeded(playerName) {
+        if (this.playerIcons[playerName]) return;
+        const used = new Set(Object.values(this.playerIcons));
+        const next = this.availableIcons.find(icon => !used.has(icon));
+        if (!next) {
+            this.playerIcons[playerName] = "🙂";
+            return;
+        }
+        this.playerIcons[playerName] = next;
+    }
+
+    getPlayerIcon(playerName) {
+        this.assignIconIfNeeded(playerName);
+        return this.playerIcons[playerName] || "🙂";
     }
 
     startGuessTimer() {

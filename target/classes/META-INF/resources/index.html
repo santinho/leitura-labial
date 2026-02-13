@@ -14,9 +14,26 @@
 <body>
     <div id="loginScreen" class="screen">
         <div class="container">
-            <h1>🎬 Leitura Labial</h1>
-            <p id="appVersion" class="app-version hidden"></p>
-            <p class="subtitle">Adivinhe o que foi dito!</p>
+            <h1 class="hero-title">
+                <span class="hero-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hero-mic float">
+                        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" x2="12" y1="19" y2="22"></line>
+                    </svg>
+                </span>
+                LipSync
+                <span class="hero-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hero-sparkles float">
+                        <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path>
+                        <path d="M20 3v4"></path>
+                        <path d="M22 5h-4"></path>
+                        <path d="M4 17v2"></path>
+                        <path d="M5 18H3"></path>
+                    </svg>
+                </span>
+            </h1>
+            <p class="subtitle hero-subtitle">O jogo de leitura labial mais divertido!</p>
             <div class="login-form">
                 <h2>Entrar em uma Sala</h2>
                 <input type="text" id="roomCode" placeholder="Digite o código da sala" maxlength="6">
@@ -116,6 +133,7 @@
                 <h3 id="correctPhrase"></h3>
             </div>
             <div class="round-results">
+                <div id="laughBurst" class="laugh-burst" aria-hidden="true"></div>
                 <h4>Respostas dos jogadores:</h4>
                 <div id="roundResultsList"></div>
             </div>
@@ -125,7 +143,7 @@
         <div id="finalResultsPhase" class="game-phase hidden">
             <h2>🏆 Fim de Jogo!</h2>
             <div class="winner-announcement">
-                <h3 id="winnerName"></h3>
+                <h3 id="winnerName" class="winner-name"></h3>
                 <p id="winnerScore"></p>
             </div>
             <div class="final-scoreboard">

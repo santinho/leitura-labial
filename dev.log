@@ -34,3 +34,65 @@ __  ____  __  _____   ___  __ ____  ______
 2026-02-12 22:04:37,048 INFO  [io.quarkus] (Quarkus Main Thread) quarkus-party-game 1.0.0-SNAPSHOT on JVM (powered by Quarkus 3.2.0.Final) started in 14.667s. Listening on: http://0.0.0.0:8080
 2026-02-12 22:04:37,060 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.
 2026-02-12 22:04:37,065 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, resteasy-reactive, resteasy-reactive-jackson, smallrye-context-propagation, vertx, websockets, websockets-client]
+2026-02-13 00:30:49,632 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.023s 
+2026-02-13 00:33:39,398 ERROR [org.jbo.thr.errors] (executor-thread-2) Thread Thread[executor-thread-2,5,main] threw an uncaught exception: java.lang.RuntimeException: java.lang.IllegalStateException: Instance already destroyed
+	at io.undertow.websockets.ServerWebSocketContainer.invokeEndpointMethod(ServerWebSocketContainer.java:538)
+	at io.undertow.websockets.ServerWebSocketContainer$6.run(ServerWebSocketContainer.java:518)
+	at io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:581)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)
+	at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)
+	at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: java.lang.IllegalStateException: Instance already destroyed
+	at io.quarkus.arc.impl.AbstractInstanceHandle.get(AbstractInstanceHandle.java:44)
+	at io.quarkus.arc.runtime.BeanContainerImpl$1$1.get(BeanContainerImpl.java:50)
+	at io.quarkus.websockets.client.runtime.WebsocketCoreRecorder$1$1$1.getInstance(WebsocketCoreRecorder.java:136)
+	at io.undertow.websockets.annotated.AnnotatedEndpoint$5.run(AnnotatedEndpoint.java:225)
+	at io.undertow.websockets.ServerWebSocketContainer$1.call(ServerWebSocketContainer.java:143)
+	at io.undertow.websockets.ServerWebSocketContainer$1.call(ServerWebSocketContainer.java:140)
+	at io.quarkus.websockets.client.runtime.WebsocketCoreRecorder$4$1.call(WebsocketCoreRecorder.java:181)
+	at io.undertow.websockets.ServerWebSocketContainer.invokeEndpointMethod(ServerWebSocketContainer.java:536)
+	... 8 more
+
+2026-02-13 00:37:15,966 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.031s 
+2026-02-13 00:38:05,410 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.008s 
+2026-02-13 00:38:14,545 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.007s 
+2026-02-13 00:39:16,372 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.008s 
+2026-02-13 00:44:16,485 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.023s 
+2026-02-13 00:44:19,746 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.006s 
+2026-02-13 00:44:57,500 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.010s 
+2026-02-13 00:45:57,868 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.022s 
+2026-02-13 00:46:07,299 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.007s 
+2026-02-13 00:46:09,485 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.010s 
+2026-02-13 00:47:11,470 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.005s 
+2026-02-13 00:51:31,378 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.024s 
+2026-02-13 00:53:45,387 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.045s 
+2026-02-13 00:53:59,814 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.010s 
+2026-02-13 00:56:03,029 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.008s 
+2026-02-13 00:56:10,007 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.008s 
+2026-02-13 00:56:14,436 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.007s 
+2026-02-13 00:57:30,571 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.008s 
+2026-02-13 01:00:01,940 INFO  [io.qua.dep.dev.RuntimeUpdatesProcessor] (vert.x-worker-thread-1) Files changed but restart not needed - notified extensions in: 0.022s 
+2026-02-13 01:00:02,639 ERROR [org.jbo.thr.errors] (executor-thread-31) Thread Thread[executor-thread-31,5,main] threw an uncaught exception: java.lang.RuntimeException: java.lang.IllegalStateException: Instance already destroyed
+	at io.undertow.websockets.ServerWebSocketContainer.invokeEndpointMethod(ServerWebSocketContainer.java:538)
+	at io.undertow.websockets.ServerWebSocketContainer$6.run(ServerWebSocketContainer.java:518)
+	at io.quarkus.vertx.core.runtime.VertxCoreRecorder$14.runWith(VertxCoreRecorder.java:581)
+	at org.jboss.threads.EnhancedQueueExecutor$Task.run(EnhancedQueueExecutor.java:2513)
+	at org.jboss.threads.EnhancedQueueExecutor$ThreadBody.run(EnhancedQueueExecutor.java:1538)
+	at org.jboss.threads.DelegatingRunnable.run(DelegatingRunnable.java:29)
+	at org.jboss.threads.ThreadLocalResettingRunnable.run(ThreadLocalResettingRunnable.java:29)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: java.lang.IllegalStateException: Instance already destroyed
+	at io.quarkus.arc.impl.AbstractInstanceHandle.get(AbstractInstanceHandle.java:44)
+	at io.quarkus.arc.runtime.BeanContainerImpl$1$1.get(BeanContainerImpl.java:50)
+	at io.quarkus.websockets.client.runtime.WebsocketCoreRecorder$1$1$1.getInstance(WebsocketCoreRecorder.java:136)
+	at io.undertow.websockets.annotated.AnnotatedEndpoint$5.run(AnnotatedEndpoint.java:225)
+	at io.undertow.websockets.ServerWebSocketContainer$1.call(ServerWebSocketContainer.java:143)
+	at io.undertow.websockets.ServerWebSocketContainer$1.call(ServerWebSocketContainer.java:140)
+	at io.quarkus.websockets.client.runtime.WebsocketCoreRecorder$4$1.call(WebsocketCoreRecorder.java:181)
+	at io.undertow.websockets.ServerWebSocketContainer.invokeEndpointMethod(ServerWebSocketContainer.java:536)
+	... 8 more
+

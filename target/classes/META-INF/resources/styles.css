@@ -1,16 +1,55 @@
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap");
+
+:root {
+    --background: 25 100% 97%;
+    --foreground: 280 60% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 280 60% 15%;
+    --primary: 15 95% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 340 80% 65%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 30 30% 90%;
+    --muted-foreground: 280 20% 40%;
+    --accent: 270 85% 60%;
+    --accent-foreground: 0 0% 100%;
+    --success: 160 70% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 100% 55%;
+    --warning-foreground: 280 60% 15%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 40% 85%;
+    --input: 30 40% 85%;
+    --ring: 15 95% 60%;
+    --radius: 1rem;
+    --gradient-party: linear-gradient(135deg, hsl(15 95% 60%) 0%, hsl(340 80% 65%) 50%, hsl(270 85% 60%) 100%);
+    --gradient-sunset: linear-gradient(180deg, hsl(25 100% 97%) 0%, hsl(30 100% 95%) 50%, hsl(340 50% 95%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(30 50% 98%) 100%);
+    --shadow-playful: 0 8px 32px -8px hsl(15 95% 60% / 0.3);
+    --shadow-card: 0 4px 24px -4px hsl(280 60% 15% / 0.1);
+    --shadow-glow: 0 0 40px hsl(15 95% 60% / 0.4);
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    border-color: hsl(var(--border));
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: "Nunito", sans-serif;
+    background: var(--gradient-sunset);
+    color: hsl(var(--foreground));
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Fredoka", sans-serif;
 }
 
 .screen {
@@ -28,30 +67,81 @@ body {
     width: 100%;
     margin: 20px auto;
     padding: 30px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    background: var(--gradient-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    border: 1px solid hsl(var(--border));
 }
 
 h1 {
     text-align: center;
-    color: #667eea;
+    color: hsl(var(--foreground));
     margin-bottom: 10px;
     font-size: 2.5em;
 }
 
+.hero-title {
+    font-size: clamp(2.8rem, 4vw, 4rem);
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    background: var(--gradient-party);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    text-shadow: 0 12px 30px hsl(var(--primary) / 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    width: 100%;
+}
+
+.hero-icon {
+    font-size: 0.9em;
+    filter: drop-shadow(0 8px 18px hsl(var(--primary) / 0.35));
+    flex: 0 0 auto;
+}
+
+.hero-mic {
+    width: 48px;
+    height: 48px;
+    color: hsl(var(--primary));
+}
+
+.hero-sparkles {
+    width: 40px;
+    height: 40px;
+    color: hsl(var(--secondary));
+    animation-delay: 0.5s;
+}
+
+.float {
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
 .subtitle {
     text-align: center;
-    color: #666;
+    color: hsl(var(--muted-foreground));
     margin-bottom: 30px;
     font-size: 1.2em;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    font-weight: 700;
 }
 
 .app-version {
     text-align: center;
     margin-top: -15px;
     margin-bottom: 15px;
-    color: #444;
+    color: hsl(var(--muted-foreground));
     font-size: 0.9rem;
     letter-spacing: 0.03em;
     text-transform: uppercase;
@@ -63,7 +153,7 @@ h1 {
 }
 
 .login-form h2 {
-    color: #333;
+    color: hsl(var(--foreground));
     margin-bottom: 20px;
     text-align: center;
 }
@@ -72,56 +162,60 @@ h1 {
     width: 100%;
     padding: 15px;
     margin-bottom: 15px;
-    border: 2px solid #ddd;
-    border-radius: 10px;
+    border: 2px solid hsl(var(--input));
+    border-radius: 14px;
     font-size: 16px;
     transition: border-color 0.3s;
+    background: hsl(var(--card));
+    color: hsl(var(--foreground));
 }
 
 .login-form input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.2);
 }
 
 .btn-primary, .btn-secondary, .btn-danger, .btn-success {
     width: 100%;
     padding: 15px;
     border: none;
-    border-radius: 10px;
+    border-radius: 14px;
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
     transition: transform 0.2s, opacity 0.3s;
     margin-bottom: 10px;
+    box-shadow: var(--shadow-playful);
 }
 
 .btn-primary {
-    background: #667eea;
-    color: white;
+    background: var(--gradient-party);
+    color: hsl(var(--primary-foreground));
 }
 
 .btn-primary:hover:not(:disabled) {
-    background: #5568d3;
+    filter: brightness(1.05);
     transform: translateY(-2px);
 }
 
 .btn-secondary {
-    background: #95a5a6;
-    color: white;
+    background: hsl(var(--secondary));
+    color: hsl(var(--secondary-foreground));
 }
 
 .btn-secondary:hover {
-    background: #7f8c8d;
+    filter: brightness(0.95);
 }
 
 .btn-danger {
-    background: #e74c3c;
-    color: white;
+    background: hsl(var(--destructive));
+    color: hsl(var(--destructive-foreground));
 }
 
 .btn-success {
-    background: #27ae60;
-    color: white;
+    background: hsl(var(--success));
+    color: hsl(var(--success-foreground));
 }
 
 .btn-primary:disabled, .btn-secondary:disabled {
@@ -133,7 +227,7 @@ h1 {
 .divider {
     text-align: center;
     margin: 20px 0;
-    color: #999;
+    color: hsl(var(--muted-foreground));
     position: relative;
 }
 
@@ -144,7 +238,7 @@ h1 {
     top: 50%;
     width: 40%;
     height: 1px;
-    background: #ddd;
+    background: hsl(var(--border));
 }
 
 .divider::before {
@@ -159,26 +253,28 @@ h1 {
     text-align: center;
     margin: 30px 0;
     padding: 20px;
-    background: #f8f9fa;
-    border-radius: 10px;
+    background: var(--gradient-card);
+    border-radius: 14px;
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-card);
 }
 
 .lobby-info p {
     margin: 10px 0;
     font-size: 1.1em;
-    color: #555;
+    color: hsl(var(--foreground));
 }
 
 .player-name {
     font-size: 1.2em !important;
-    color: #667eea !important;
+    color: hsl(var(--primary)) !important;
 }
 
 .leader-badge {
     display: inline-block;
     padding: 10px 20px;
-    background: #f39c12;
-    color: white;
+    background: hsl(var(--warning));
+    color: hsl(var(--warning-foreground));
     border-radius: 20px;
     font-weight: bold;
     margin-top: 10px;
@@ -189,29 +285,31 @@ h1 {
 }
 
 .players-waiting h3 {
-    color: #333;
+    color: hsl(var(--foreground));
     margin-bottom: 15px;
 }
 
 .players-list {
-    background: #f8f9fa;
+    background: var(--gradient-card);
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 14px;
     min-height: 100px;
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-card);
 }
 
 .player-item {
     padding: 10px;
     margin: 5px 0;
-    background: white;
-    border-radius: 5px;
+    background: hsl(var(--card));
+    border-radius: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .player-item.leader {
-    border-left: 4px solid #f39c12;
+    border-left: 4px solid hsl(var(--warning));
 }
 
 .lobby-actions {
@@ -223,7 +321,7 @@ h1 {
 }
 
 #gameScreen {
-    background: white;
+    background: var(--gradient-card);
     padding: 20px;
     overflow-y: auto;
 }
@@ -233,10 +331,25 @@ h1 {
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    background: #667eea;
-    color: white;
-    border-radius: 10px;
+    background: var(--gradient-party);
+    color: hsl(var(--primary-foreground));
+    border-radius: 14px;
     margin-bottom: 20px;
+    box-shadow: var(--shadow-playful);
+}
+
+.game-header .room-info {
+    font-family: "Fredoka", sans-serif;
+    font-weight: 700;
+}
+
+.game-header .room-info strong,
+.game-header .room-info span {
+    background: var(--gradient-party);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
 }
 
 .game-header > div {
@@ -245,14 +358,16 @@ h1 {
 }
 
 .scoreboard {
-    background: #f8f9fa;
+    background: var(--gradient-card);
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 14px;
     margin-bottom: 20px;
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-card);
 }
 
 .scoreboard h3 {
-    color: #333;
+    color: hsl(var(--foreground));
     margin-bottom: 15px;
 }
 
@@ -261,12 +376,12 @@ h1 {
     justify-content: space-between;
     padding: 10px;
     margin: 5px 0;
-    background: white;
-    border-radius: 5px;
+    background: hsl(var(--card));
+    border-radius: 10px;
 }
 
 .score-item.current-player {
-    border-left: 4px solid #667eea;
+    border-left: 4px solid hsl(var(--primary));
     font-weight: bold;
 }
 
@@ -277,18 +392,19 @@ h1 {
 }
 
 .game-phase h2 {
-    color: #667eea;
+    color: hsl(var(--foreground));
     text-align: center;
     margin-bottom: 20px;
 }
 
 .phrase-box {
-    background: #f39c12;
-    color: white;
+    background: var(--gradient-party);
+    color: hsl(var(--primary-foreground));
     padding: 30px;
     border-radius: 15px;
     text-align: center;
     margin-bottom: 30px;
+    box-shadow: var(--shadow-playful);
 }
 
 .phrase-box h3 {
@@ -301,7 +417,7 @@ h1 {
     font-size: 18px;
     font-weight: 600;
     margin: 12px 0 18px;
-    color: #2c3e50;
+    color: hsl(var(--muted-foreground));
 }
 
 .video-recording, .video-player {
@@ -329,7 +445,7 @@ h1 {
 
 .video-counter p {
     font-size: 1.2em;
-    color: #333;
+    color: hsl(var(--foreground));
     margin-bottom: 10px;
 }
 
@@ -337,8 +453,8 @@ h1 {
     width: 50px;
     height: 50px;
     margin: 30px auto;
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid #667eea;
+    border: 5px solid hsl(var(--muted));
+    border-top: 5px solid hsl(var(--primary));
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -356,26 +472,29 @@ h1 {
 .guess-input input {
     width: 100%;
     padding: 15px;
-    border: 2px solid #ddd;
-    border-radius: 10px;
+    border: 2px solid hsl(var(--input));
+    border-radius: 14px;
     font-size: 16px;
     margin-bottom: 15px;
+    background: hsl(var(--card));
+    color: hsl(var(--foreground));
 }
 
 .hint {
     text-align: center;
-    color: #999;
+    color: hsl(var(--muted-foreground));
     font-style: italic;
     margin-top: 15px;
 }
 
 .correct-phrase {
-    background: #27ae60;
-    color: white;
+    background: hsl(var(--success));
+    color: hsl(var(--success-foreground));
     padding: 30px;
     border-radius: 15px;
     text-align: center;
     margin-bottom: 30px;
+    box-shadow: var(--shadow-playful);
 }
 
 .correct-phrase h3 {
@@ -384,30 +503,67 @@ h1 {
 }
 
 .round-results {
-    background: #f8f9fa;
+    background: var(--gradient-card);
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 14px;
     margin-bottom: 20px;
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-card);
+    position: relative;
+    overflow: hidden;
+}
+
+.laugh-burst {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.laugh-emoji {
+    position: absolute;
+    font-size: 28px;
+    animation: laughPop 4s ease-out forwards;
+    pointer-events: none;
+    filter: drop-shadow(0 6px 12px hsl(var(--primary) / 0.35));
+    z-index: 2;
+}
+
+@keyframes laughPop {
+    0% { opacity: 0; transform: translateY(10px) scale(0.8); }
+    15% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-40px) scale(1.1); }
 }
 
 .result-item {
     padding: 15px;
     margin: 10px 0;
-    background: white;
-    border-radius: 5px;
-    border-left: 4px solid #ddd;
+    background: hsl(var(--card));
+    border-radius: 10px;
+    border-left: 4px solid hsl(var(--border));
 }
 
 .result-item.correct {
-    border-left-color: #27ae60;
+    border-left-color: hsl(var(--success));
 }
 
 .result-item strong {
-    color: #667eea;
+    color: hsl(var(--primary));
+}
+
+.result-item .guess {
+    font-size: 1.15em;
+    font-weight: 700;
+    margin: 6px 0 4px;
+    background: var(--gradient-party);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
 }
 
 .result-item .accuracy {
-    color: #27ae60;
+    color: hsl(var(--success));
     font-weight: bold;
     font-size: 1.1em;
 }
@@ -415,10 +571,11 @@ h1 {
 .winner-announcement {
     text-align: center;
     padding: 40px;
-    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-    color: white;
+    background: var(--gradient-party);
+    color: hsl(var(--primary-foreground));
     border-radius: 15px;
     margin-bottom: 30px;
+    box-shadow: var(--shadow-glow);
 }
 
 .winner-announcement h3 {
@@ -426,11 +583,42 @@ h1 {
     margin-bottom: 10px;
 }
 
+.winner-name {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+}
+
+.winner-title {
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.9;
+}
+
+.winner-player {
+    font-size: clamp(2.2rem, 4vw, 3.2rem);
+    font-weight: 800;
+    animation: heartbeat 2.4s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    20% { transform: scale(1.04); }
+    40% { transform: scale(0.98); }
+    60% { transform: scale(1.05); }
+    80% { transform: scale(1); }
+}
+
 .final-scoreboard {
-    background: #f8f9fa;
+    background: var(--gradient-card);
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 14px;
     margin-bottom: 20px;
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-card);
 }
 
 @media (max-width: 768px) {
@@ -499,8 +687,8 @@ h1 {
         font-size: 0.8em;
         border-radius: 999px;
         flex: 0 0 auto;
-        background: white;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        background: hsl(var(--card));
+        box-shadow: 0 1px 2px hsl(var(--foreground) / 0.08);
         border-left: none;
         white-space: nowrap;
     }
@@ -510,7 +698,7 @@ h1 {
     }
 
     .score-item.current-player {
-        box-shadow: inset 0 0 0 2px #667eea;
+        box-shadow: inset 0 0 0 2px hsl(var(--primary));
     }
 
     .game-phase {
