@@ -35,7 +35,7 @@ class LipReadingGame {
         this.turnInterval = null;
         this.turnRemainingSeconds = 0;
         this.autoSubmitOnStop = false;
-        this.maxTurnMs = 20000;
+        this.maxTurnMs = 30000;
         this.guessTimeout = null;
         this.guessInterval = null;
         this.guessRemainingSeconds = 0;
@@ -146,7 +146,120 @@ class LipReadingGame {
             "A janela abriu um sorriso",
             "O chuveiro ficou com medo do frio",
             "A tomada pediu desculpas pelo choque",
-            "O microfone ficou rouco sem show"
+            "O microfone ficou rouco sem show",
+            "O travesseiro abriu uma empresa de cochilos",
+            "A torrada pediu autógrafo do queijo",
+            "O cabo USB só encaixa do lado errado",
+            "A escada suspirou no terceiro degrau",
+            "O chapéu se perdeu num desfile",
+            "A mala fez check-out sozinha",
+            "O relógio cansou de correr atrás do tempo",
+            "O ventilador fez penteado no gato",
+            "O chinelo deu meia-volta no corredor",
+            "A caneca ficou triste sem café",
+            "O telefone caiu no sono e desligou",
+            "O fósforo se achou uma estrela",
+            "A gelatina tremeu de emoção",
+            "O fogão pediu licença para acender",
+            "O alarme tocou e pediu silêncio",
+            "A mochila entrou no ônibus errado",
+            "O cabide se vestiu de manhã",
+            "A bandeja derrubou os próprios planos",
+            "O cinto apertou a agenda",
+            "A janela fechou de ciúmes do vento",
+            "O ventilador espirrou poeira",
+            "O carregador reclamou da tomada concorrente",
+            "A régua se curvou de vergonha",
+            "O rascunho virou poema sem querer",
+            "A calculadora perdeu a conta",
+            "O calendário marcou reunião no sábado",
+            "O teclado clicou só para chamar atenção",
+            "O mouse fez mochilão pela mesa",
+            "A tela piscou e fingiu travar",
+            "O pendrive sumiu na festa da mochila",
+            "O celular pediu intervalo do grupo",
+            "A bateria fugiu no meio do jogo",
+            "O fone de ouvido virou nó artístico",
+            "A playlist trocou a música no refrão",
+            "O alto-falante sussurrou com vergonha",
+            "O micro-ondas pediu bis do jantar",
+            "A panela escorregou na espuma",
+            "O filtro de água contou segredo",
+            "A chaleira assobiou uma melodia",
+            "O copo d'água fez natação sincronizada",
+            "A colher preferiu colher conversas",
+            "O garfo se enrolou com o espaguete",
+            "A faca pediu licença para cortar",
+            "A tábua de cortar fez greve",
+            "O pão se escondeu do tostador",
+            "O ovo ensaiou uma fuga na frigideira",
+            "O macarrão fez trança no prato",
+            "A salada pediu um casaco",
+            "A pipoca estourou de felicidade",
+            "O sorvete caiu de alegria",
+            "A sobremesa fez fila no freezer",
+            "O brigadeiro virou celebridade",
+            "A colher de pau virou diretora",
+            "O guardanapo dobrou as regras",
+            "O forno abriu a porta sozinho",
+            "A pia entupiu de saudade",
+            "O filtro de café tirou férias",
+            "O açúcar fugiu do potinho",
+            "O saleiro ficou com ciúmes da pimenta",
+            "A pimenta espirrou pimenta",
+            "O limão fez careta antes de cair",
+            "A laranja perdeu o sorriso",
+            "O tomate achou que era maçã",
+            "A maçã ficou vermelha de vergonha",
+            "O bolo se vestiu de aniversário",
+            "A vela chorou cera",
+            "O balão subiu e voltou com fofoca",
+            "O confete escondeu a bagunça",
+            "O presente embrulhou a surpresa errada",
+            "O laço ficou com nó na garganta",
+            "A cadeira pediu ticket de estacionamento",
+            "O banco levantou e saiu",
+            "A mesa cochichou com a cadeira",
+            "O quadro caiu no momento errado",
+            "A porta rangiu de emoção",
+            "A fechadura pediu senha mais forte",
+            "A chave tirou folga do chaveiro",
+            "O tapete fez yoga no corredor",
+            "A cortina dançou no vento",
+            "O espelho praticou caretas",
+            "A lâmpada piscou em código Morse",
+            "O interruptor virou DJ do quarto",
+            "O ventilador pediu autógrafo da brisa",
+            "O sofá engoliu o controle de novo",
+            "O controle remoto pediu localização",
+            "A estante cochilou com os livros",
+            "O livro abriu na página errada",
+            "A página virou sozinha e se arrependeu",
+            "O marcador se perdeu no capítulo",
+            "O caderno fez resenha do dia",
+            "A caneta falhou no momento dramático",
+            "O lápis pediu para apontar ideias",
+            "A borracha apagou a própria sombra",
+            "O apontador engoliu o lápis inteiro",
+            "A mochila colecionou bilhetes secretos",
+            "O guarda-chuva ensaiou uma coreografia",
+            "A chuva esqueceu de chover",
+            "O céu fez uma selfie com as nuvens",
+            "A nuvem fez formato de sapo",
+            "O sol piscou de canto de olho",
+            "A lua bocejou no meio do filme",
+            "A estrela caiu para tirar férias",
+            "O vento assobiou desafinado",
+            "A árvore contou história para as folhas",
+            "A folha decidiu mudar de galho",
+            "O passarinho fez reunião de condomínio",
+            "O cachorro pediu senha do Wi-Fi",
+            "O gato ignorou o relógio de novo",
+            "O peixe tentou escapar do filtro",
+            "A tartaruga pediu turbo",
+            "O coelho perdeu o ônibus",
+            "A formiga organizou um buffet",
+            "A abelha fez zigue-zague com estilo"
         ];
         
         this.initializeEventListeners();
@@ -915,7 +1028,7 @@ class LipReadingGame {
         }
 
         const button = document.getElementById('continueGame');
-        let remaining = 8;
+        let remaining = 18;
         if (button) {
             button.disabled = true;
             button.textContent = `Próxima gravação em ${remaining}s`;
@@ -955,7 +1068,7 @@ class LipReadingGame {
             if (button) {
                 button.textContent = 'Aguardando próxima rodada...';
             }
-        }, 8000);
+        }, 18000);
     }
 
     nextRound() {

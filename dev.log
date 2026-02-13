@@ -1,0 +1,36 @@
+nohup: ignoring input
+[INFO] Scanning for projects...
+Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/mojo/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/io/quarkus/maven-metadata.xml
+Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-metadata.xml
+Progress (1): 1.4 kBProgress (2): 1.4 kB | 3.1 kBProgress (3): 1.4 kB | 3.1 kB | 4.6 kBProgress (3): 1.4 kB | 3.1 kB | 10 kB Progress (3): 1.4 kB | 8.0 kB | 10 kBProgress (3): 1.4 kB | 8.0 kB | 10 kBProgress (3): 1.4 kB | 13 kB | 10 kB Progress (3): 1.4 kB | 17 kB | 10 kBProgress (3): 1.4 kB | 17 kB | 14 kBProgress (3): 1.4 kB | 20 kB | 14 kBProgress (3): 1.4 kB | 21 kB | 14 kB                                    Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-metadata.xml (14 kB at 5.4 kB/s)
+Downloaded from central: https://repo.maven.apache.org/maven2/io/quarkus/maven-metadata.xml (1.4 kB at 535 B/s)
+Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/mojo/maven-metadata.xml (21 kB at 7.6 kB/s)
+[INFO] 
+[INFO] -------------------< com.example:quarkus-party-game >-------------------
+[INFO] Building quarkus-party-game 1.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- quarkus:3.2.0.Final:dev (default-cli) @ quarkus-party-game ---
+[INFO] Invoking org.apache.maven.plugins:maven-resources-plugin:3.3.1:resources (default-resources) @ quarkus-party-game
+[INFO] Copying 4 resources from src/main/resources to target/classes
+[INFO] Invoking org.apache.maven.plugins:maven-compiler-plugin:3.13.0:compile (default-compile) @ quarkus-party-game
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] Invoking org.apache.maven.plugins:maven-resources-plugin:3.3.1:testResources (default-testResources) @ quarkus-party-game
+[INFO] skip non existing resourceDirectory /home/admin/projects/quarkus-party-game/src/test/resources
+[INFO] Invoking org.apache.maven.plugins:maven-compiler-plugin:3.13.0:testCompile (default-testCompile) @ quarkus-party-game
+[INFO] No sources to compile
+Listening for transport dt_socket at address: 5005
+Press [e] to edit command line args (currently ''), [h] for more options>
+Tests paused
+Press [e] to edit command line args (currently ''), [r] to resume testing, [h] for more options>
+Press [e] to edit command line args (currently ''), [r] to resume testing, [o] Toggle test output, [h] for more options>
+__  ____  __  _____   ___  __ ____  ______ 
+ --/ __ \/ / / / _ | / _ \/ //_/ / / / __/ 
+ -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\ \   
+--\___\_\____/_/ |_/_/|_/_/|_|\____/___/   
+2026-02-12 22:04:34,829 INFO  [io.und.websockets] (Quarkus Main Thread) UT026003: Adding annotated server endpoint class com.example.partygame.GameSocket for path /ws/game/{room}
+2026-02-12 22:04:37,048 INFO  [io.quarkus] (Quarkus Main Thread) quarkus-party-game 1.0.0-SNAPSHOT on JVM (powered by Quarkus 3.2.0.Final) started in 14.667s. Listening on: http://0.0.0.0:8080
+2026-02-12 22:04:37,060 INFO  [io.quarkus] (Quarkus Main Thread) Profile dev activated. Live Coding activated.
+2026-02-12 22:04:37,065 INFO  [io.quarkus] (Quarkus Main Thread) Installed features: [cdi, resteasy-reactive, resteasy-reactive-jackson, smallrye-context-propagation, vertx, websockets, websockets-client]
